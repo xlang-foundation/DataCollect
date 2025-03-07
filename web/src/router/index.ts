@@ -19,11 +19,11 @@ const router = createRouter({
       name: 'zone',
       component: () => import('../views/ZoneView.vue'),
     },
-    // {
-    //   path: '/takePhoto/:zoneId',
-    //   name: 'takePhoto-zoneId',
-    //   component: () => import('../views/TakePhotosView.vue'),
-    // },
+    {
+      path: '/takePhoto/:zoneId',
+      name: 'takePhoto-zoneId',
+      component: () => import('../views/TakePhotosView.vue'),
+    },
     {
       path: '/photoList',
       name: 'photoList',

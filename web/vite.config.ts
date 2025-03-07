@@ -16,6 +16,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts:["gaoyi.free.svipss.top"],
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
