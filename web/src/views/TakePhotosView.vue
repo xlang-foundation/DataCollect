@@ -47,7 +47,9 @@ import { ref, watch, type Ref } from "vue";
 import { v4 as uuidv4 } from 'uuid';
 import localforage from "localforage";
 import { blobToDataURL } from "@/utils/dataUrlTools";
-
+import { usePhotoStore } from "@/stores/photo.ts"
+import { ElMessage } from "element-plus";
+const photoStore = usePhotoStore()
 const currentCamera = ref()
 const cameraList: Ref<{
   label: string;
@@ -122,15 +124,22 @@ function takePhoto() {
     if (videoTrack) {
       // @ts-ignore
       let capture = new ImageCapture(videoTrack)
+      const id = uuidv4()
       capture.takePhoto().then(async (blob: Blob) => {
-        console.log(blob);
         const dataUrl = await blobToDataURL(blob)
 
         // 图片二进制数据
         const image = {
-          id: uuidv4(),
+          id,
           dataUrl,
-          gps: null,
+          gps: {
+            accuracy: photoStore.gps.accuracy,
+            coords: {
+              latitude: photoStore.gps.coords.latitude,
+              longitude: photoStore.gps.coords.longitude,
+            },
+            timestamp: photoStore.gps.timestamp,
+          },
           shotTime: Date.now(),
         }
 
@@ -144,24 +153,16 @@ function takePhoto() {
         // 存储图片到数据库
         imageStore.setItem(image.id.toString(), image).then(() => {
           console.log('Image stored successfully');
-        }).catch((error) => {
-          console.error('Error storing image:', error);
+          ElMessage({
+            message: 'mage stored successfully',
+            type: 'success',
+          })
+        }).catch((error:any) => {
+          ElMessage({
+            message:'Error storing image:'+ error.message,
+            type: 'error',
+          })
         });
-
-        // 获取gps数据
-        navigator.geolocation.getCurrentPosition((a)=>{
-          // 将gps更新到数据库
-
-        },(error)=>{
-          // 获取位置失败
-
-        },{
-          enableHighAccuracy: true,    // 是否要求高精度定位
-          timeout: 5000,               // 获取位置的最大等待时间（毫秒）
-          maximumAge: 0                // 可接受的位置缓存最大时长（毫秒）
-        })
-
-
       })
       .catch((error:any) => {
         console.error("takePhoto() error: ", error);

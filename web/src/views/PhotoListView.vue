@@ -34,6 +34,13 @@
   <!-- 抽屉，用于展示图片并上传 -->
   <el-drawer v-model="drawer" size="100%" title="图片预览"  :show-close="true">
     <div class="photo-preview">
+      <!-- 增加删除图片按钮 -->
+       <el-popconfirm title="Are you sure to delete this?" @confirm="deleteItem">
+        <template #reference>
+          <el-button type="danger">删除</el-button>
+        </template>
+      </el-popconfirm>
+
       <img style="width: 100%;" :src="currentItem?.dataUrl" alt=""></img>
       <div class="location">
         <div>纬度:{{currentItem?.gps?.coords.latitude}}</div>
@@ -70,6 +77,7 @@ import { onMounted, ref, toRaw, type Ref } from 'vue';
 import {mockData} from "./data"
 import { useRouter } from 'vue-router'
 import { dataURLtoBlob } from '@/utils/dataUrlTools';
+import { ElMessage } from 'element-plus';
 const drawer = ref(false)
 const router = useRouter()
 type ItemStruct = {
@@ -143,6 +151,30 @@ imageStore.iterate((value, key, iterationNumber) => {
   }
 });
 
+// 从缓存中删除
+function deleteItem() {
+  console.log(currentItem.value);
+  if (currentItem.value) {
+    imageStore.removeItem(currentItem.value.id.toString()).then(() => {
+      console.log('Image removed successfully');
+      // 从images 中删除
+      const index = images.value.findIndex(item => item.id === currentItem.value?.id);
+      if (index !== -1) {
+        images.value.splice(index, 1);
+      }
+      // element-plus提示删除成功
+
+      ElMessage({
+        message: 'Image removed successfully',
+        type: 'success',
+      })
+   }).catch((error) => {
+     ElMessage.error('Error removing image:', error)
+   }).finally(()=>{
+    drawer.value = false
+   })
+  }
+}
 
 
 // 跳转到拍照页
