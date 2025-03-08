@@ -95,7 +95,7 @@ const imageStore = localforage.createInstance({
   storeName: 'images'
 });
 localforage.setDriver(localforage.INDEXEDDB);
-// 列出可选的驱动，以优先级排序
+
 function openPreview(image: ItemStruct) {
   drawer.value = true;
   // 把label的checked设置为false
@@ -127,13 +127,21 @@ const labels:Ref<LabelInfo[]> = ref([])
 
 // 示例数据，请替换为真实数据源
 // 向images 中添加mockData 5次
-for (let i = 0; i < 5; i++) {
-  const data =  structuredClone(mockData)
-  data.id += i
-  images.value.push(data);
-  const blob = dataURLtoBlob(data.dataUrl)
-  console.log(blob);
-}
+// for (let i = 0; i < 5; i++) {
+//   const data =  structuredClone(mockData)
+//   data.id += i
+//   images.value.push(data);
+//   const blob = dataURLtoBlob(data.dataUrl)
+//   console.log(blob);
+// }
+
+// 获取数据库数据
+imageStore.iterate((value, key, iterationNumber) => {
+  console.log(value, key, iterationNumber);
+  if (value) {
+    images.value.push(value as ItemStruct);
+  }
+});
 
 
 

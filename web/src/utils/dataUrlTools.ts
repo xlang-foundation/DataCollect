@@ -20,16 +20,31 @@ export function dataURLtoBlob(dataURL: string) {
 // console.log(blob);
 
 
-export function blobToDataURL(blob:Blob, callback: (dataURL: any) => void) {
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    callback(e.target?.result);
-  };
-  reader.readAsDataURL(blob);
+export async function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        resolve(e.target.result as string);
+      } else {
+        reject(new Error("Failed to read blob data"));
+      }
+    };
+
+    reader.onerror = () => {
+      reject(reader.error || new Error("Unknown error occurred"));
+    };
+
+    reader.readAsDataURL(blob);
+  });
 }
 
 // // 示例用法
-// var blob = new Blob(["Hello, world!"], { type: "text/plain" });
-// blobToDataURL(blob, function(dataURL) {
-//   console.log(dataURL);
-// });
+// const dataURL = await blobToDataURL(blob);
+// console.log(dataURL);
+
+// // 使用Promise链式调用
+// blobToDataURL(blob)
+//   .then(dataURL => console.log(dataURL))
+//   .catch(error => console.error(error));
