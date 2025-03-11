@@ -110,17 +110,6 @@ function openPreview(image: ItemStruct) {
   labels.value.forEach(label => {
     label.checked = false
   })
-
-  imageStore.setItem(image.id.toString(), toRaw(image)).then(() => {
-    console.log('Image stored successfully');
-  }).catch((error) => {
-    console.error('Error storing image:', error);
-  });
-  imageStore.getItem(image.dataUrl).then((value) => {
-    console.log('Retrieved image:', value);
-  }).catch((error) => {
-    console.error('Error retrieving image:', error);
-  });
   currentItem.value = image;
 }
 
