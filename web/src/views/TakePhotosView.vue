@@ -17,7 +17,9 @@
           flex-wrap: wrap;"
         >
           <div v-for="(label, index) in labels" :key="index">
-            <el-check-tag :checked="label.checked"  @change="(status)=>{label.checked = status}">
+            <el-check-tag :checked="label.checked" @change="(status)=>{
+              handleLabelChange(label,status)
+            }">
               {{ label.checked ? '✅' : '' }}
               {{label.label}}
             </el-check-tag>
@@ -101,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, type Ref } from "vue";
+import { onMounted, ref, toRaw, watch, type Ref } from "vue";
 import { v4 as uuidv4 } from 'uuid';
 import localforage from "localforage";
 import { blobToDataURL } from "@/utils/dataUrlTools";
@@ -204,10 +206,24 @@ watch(currentCamera, (newValue, oldValue) => {
 function openPreview(image: ItemStruct) {
   drawer.value = true;
   // 把label的checked设置为false
+  // 重置所有标签的选中状态
   labels.value.forEach(label => {
-    label.checked = false
-  })
-  currentItem.value = image;
+    label.checked = image?.labels?.includes(label.label) || false;
+  });
+
+  if (!image?.labels) {
+    image.labels = []
+  } else {
+    image.labels = labels.value.filter(label => label.checked).map(label => label.label)
+    // 将数据更新并存回缓存
+    imageStore.setItem(image.id.toString(), toRaw(image)).then(() => {
+      currentItem.value = toRaw(image) as unknown as ItemStruct
+      drawer.value = true
+    }).catch((error:any) => {
+      console.error(error);
+    });
+  }
+
 }
 function gotDevices(deviceInfos:MediaDeviceInfo[]) {
 
@@ -274,6 +290,7 @@ function takePhoto() {
             timestamp: photoStore.gps.timestamp,
           },
           shotTime: Date.now(),
+          labels: [],
         }
 
 
@@ -363,6 +380,37 @@ const handleExceed = (files: UploadRawFile[], fileList: UploadRawFile[]) => {
 };
 const submitUpload = () => {
 
+}
+
+// 处理标签变更
+const handleLabelChange = async (label: LabelInfo, status: boolean) => {
+  label.checked = status;
+  label = toRaw(label)
+  if (!label) {
+    return
+  }
+  if (currentItem.value) {
+    // 更新currentItem的labels
+    currentItem.value.labels = labels.value
+      .filter(l => l.checked)
+      .map(l => l.label);
+    try {
+      const id = currentItem.value.id.toString()
+      const data =  toRaw(currentItem.value)
+
+      // 保存到数据库
+      await imageStore.setItem(id, data);
+
+      // 更新images数组中对应的item
+      const index = images.value.findIndex(item => item.id === currentItem.value?.id);
+      if (index !== -1) {
+        images.value[index] = currentItem.value!;
+      }
+    } catch (error) {
+      console.log(error);
+      ElMessage.error('标签更新失败: ' + error);
+    }
+  }
 }
 </script>
 
