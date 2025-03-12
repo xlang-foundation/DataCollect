@@ -24,6 +24,10 @@
           <el-icon><Collection /></el-icon>
           <span>标签管理</span>
         </el-menu-item>
+        <el-menu-item index="/admin/task">
+          <el-icon><Share /></el-icon>
+          <span>分派任务</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
@@ -47,7 +51,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { User, Location, Collection } from '@element-plus/icons-vue'
+import { User, Location, Collection, Share } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
 const router = useRouter()

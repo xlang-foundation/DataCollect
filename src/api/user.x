@@ -453,4 +453,29 @@ def getAllLabels():
 
 
 
+# API: Sign Name Token
+@srv.route("/api/user/sign-name") 
+def sign_name_token():
+    # 验证用户token
+    verify = auth.authentication(req)
+    if verify != None:
+        return verify
+
+    body = req.body
+    jsonBody = yaml.loads(body)
+    
+    name = jsonBody["name"]
+    # 名称不能为空
+    if name == "" or name == None:
+        return [str({"success": False, "message": "The name cannot be empty"}, format=True), "text/json"]
+
+    # 生成名称token
+    name_token = simple_hash.sign_name(name)
+    
+    return [str({
+        "success": True,
+        "message": "Name token generated successfully", 
+        "token": name_token
+    }, format=True), "text/json"]
+
 # ---------------------------------------------------FileUpdate---------------------------------------------------

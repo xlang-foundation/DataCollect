@@ -1,60 +1,57 @@
-// src/api/user.ts
-import { request } from '@/utils/request'
+import request from '@/utils/request'
 
+export interface LoginData {
+  username: string
+  password: string
+  display_name: string
+}
+interface SignNameResponse {
+  success: boolean
+  message: string
+  token: string
+}
 export interface UserInfo {
   username: string
   display_name: string
   last_login: number
 }
 
-export interface LoginResponse {
-  success: boolean
-  message: string
-  token: string
-  username: string
-  display_name: string
-}
-
-// 登录
-export function login(username: string, password: string): Promise<LoginResponse> {
+export function login(data: LoginData) {
   return request({
     url: '/api/user/login',
     method: 'post',
-    data: {
-      username,
-      password
-    }
+    data
   })
 }
 
-// 获取用户列表
-export function getUserList(): Promise<UserInfo[]> {
+export function register(data: LoginData) {
+  return request({
+    url: '/api/user/register',
+    method: 'post',
+    data
+  })
+}
+
+export function getUserList() {
   return request({
     url: '/api/user/list',
     method: 'get'
   })
 }
 
-// 添加用户
-export function register(username: string, password: string, display_name: string): Promise<any> {
-  return request({
-    url: '/api/user/register',
-    method: 'post',
-    data: {
-      username,
-      password,
-      display_name
-    }
-  })
-}
-
-// 删除用户
-export function deleteUser(username: string): Promise<any> {
+export function deleteUser(target_username: string) {
   return request({
     url: '/api/user/delete',
     method: 'post',
-    data: {
-      target_username: username
-    }
+    data: { target_username }
+  })
+}
+
+// 新增签名接口
+export function signName(name: string): Promise<SignNameResponse> {
+  return request({
+    url: '/api/user/sign-name',
+    method: 'post',
+    data: { name }
   })
 }

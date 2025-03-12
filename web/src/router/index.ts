@@ -45,20 +45,55 @@ const router = createRouter({
             title: '标签管理',
             requiresAuth: true
           }
+        },
+        {
+          path: 'task',
+          name: 'TaskAssignment',
+          component: () => import('@/views/admin/task/index.vue'),
+          meta: {
+            title: '分派任务',
+            requiresAuth: true
+          }
         }
       ]
     },
     {
       path: '/',
       redirect: '/admin'
+    },
+    {
+      path: '/zone/:zoneId',
+      name: 'zone-zoneId',
+      component: () => import('../views/ZoneView.vue'),
+    },
+    {
+      path: '/zone',
+      name: 'zone',
+      component: () => import('../views/ZoneView.vue'),
+    },
+    {
+      path: '/takePhoto/:zoneId',
+      name: 'takePhoto-zoneId',
+      component: () => import('../views/TakePhotosView.vue'),
     }
   ]
 })
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  // 设置页面标题
-  document.title = `${to.meta.title || '管理系统'}`
+  // 处理name_token参数
+  if (to.query.name_token) {
+    // 存储name_token到localStorage
+    localStorage.setItem('name_token', to.query.name_token as string)
+
+    // 创建新的query对象，移除name_token
+    const query = { ...to.query }
+    delete query.name_token
+
+    // 重定向到相同路径但没有name_token参数的URL
+    next({ path: to.path, query })
+    return
+  }
 
   // 检查是否需要登录权限
   if (to.matched.some(record => record.meta.requiresAuth)) {
