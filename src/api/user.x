@@ -109,7 +109,7 @@ def delete_user():
     verify = auth.authentication(req)
     if verify != None:
         return verify
-    token_str = req.all_headers["X-Token"]
+    token_str = req.all_headers["x-token"]
     token_info = simple_hash.token_decode(token_str)
     token_username = token_info[0]
 
@@ -152,7 +152,7 @@ def add_zone():
     verify = auth.authentication(req)
     if verify != None:
         return verify
-    token_str = req.all_headers["X-Token"]
+    token_str = req.all_headers["x-token"]
     token_info = simple_hash.token_decode(token_str)
     token_username = token_info[0]
     # 验证管理员身份
@@ -212,7 +212,7 @@ def delete_zone():
     verify = auth.authentication(req)
     if verify != None:
         return verify
-    token_str = req.all_headers["X-Token"]
+    token_str = req.all_headers["x-token"]
     token_info = simple_hash.token_decode(token_str)
     token_username = token_info[0]
     # 验证管理员身份
@@ -251,7 +251,7 @@ def update_zone():
     verify = auth.authentication(req)
     if verify != None:
         return verify
-    token_str = req.all_headers["X-Token"]
+    token_str = req.all_headers["x-token"]
     token_info = simple_hash.token_decode(token_str)
     token_username = token_info[0]
     # 验证管理员身份
@@ -308,7 +308,7 @@ def add_label():
     verify = auth.authentication(req)
     if verify != None:
         return verify
-    token_str = req.all_headers["X-Token"]
+    token_str = req.all_headers["x-token"]
     token_info = simple_hash.token_decode(token_str)
     token_username = token_info[0]
     # 验证管理员身份
@@ -347,7 +347,7 @@ def delete_label():
     verify = auth.authentication(req)
     if verify != None:
         return verify
-    token_str = req.all_headers["X-Token"]
+    token_str = req.all_headers["x-token"]
     token_info = simple_hash.token_decode(token_str)
     token_username = token_info[0]
     # 验证管理员身份
@@ -387,7 +387,7 @@ def update_label():
     verify = auth.authentication(req)
     if verify != None:
         return verify
-    token_str = req.all_headers["X-Token"]
+    token_str = req.all_headers["x-token"]
     token_info = simple_hash.token_decode(token_str)
     token_username = token_info[0]
     # 验证管理员身份

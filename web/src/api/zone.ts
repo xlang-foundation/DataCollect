@@ -14,3 +14,30 @@ export const getZoneList = () => {
     method: 'GET',
   })
 }
+
+// 添加区域
+export const addZone = (name: string) => {
+  return request({
+    url: '/api/zone/add',
+    method: 'POST',
+    data: { name }
+  })
+}
+
+// 删除区域
+export const deleteZone = (id: number) => {
+  return request({
+    url: '/api/zone/delete',
+    method: 'POST',
+    data: { id }
+  })
+}
+
+// 更新区域
+export const updateZone = (id: number, name: string) => {
+  return request({
+    url: '/api/zone/update',
+    method: 'POST',
+    data: { id, name }
+  })
+}
