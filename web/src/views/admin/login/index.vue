@@ -80,10 +80,12 @@ const handleLogin = async () => {
 
   await loginFormRef.value.validate(async (valid) => {
     if (!valid) return
-
     try {
       loading.value = true
-      const res = await login(loginForm.username, loginForm.password)
+      const res = await login({
+        username: loginForm.username,
+        password: loginForm.password
+      })
 
       // 保存token和用户信息
       localStorage.setItem('token', res.token)
