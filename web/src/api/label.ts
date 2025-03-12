@@ -5,6 +5,7 @@ import { request } from '@/utils/request'
 export interface LabelInfo {
   id: number
   label: string
+  checked?: boolean // 方便前端判断是否选中使用（接口不会返回）
 }
 
 // 获取标签列表

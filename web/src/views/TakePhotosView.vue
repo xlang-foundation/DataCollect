@@ -18,7 +18,8 @@
         >
           <div v-for="(label, index) in labels" :key="index">
             <el-check-tag :checked="label.checked"  @change="(status)=>{label.checked = status}">
-              ✅{{label.label}}
+              {{ label.checked ? '✅' : '' }}
+              {{label.label}}
             </el-check-tag>
           </div>
         </div>
@@ -146,6 +147,7 @@ type ItemStruct = {
 
   };
   shotTime: number;
+  labels?: string[];
 };
 // 图片列表
 const images = ref<ItemStruct[]>([]);
