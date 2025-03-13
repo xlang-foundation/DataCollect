@@ -22,7 +22,7 @@ def create_users_table():
         
         # Create a default admin user
         %INSERT INTO users (username, password, display_name, last_login) \
-        VALUES ('admin', '255332&17197393981645110028255332', 'Administrator', '');
+        VALUES ('admin', '255332&17197393981645110028255332', 'Administrator', '1741886055');
     
     popWritepad()
 
