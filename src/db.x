@@ -3,14 +3,15 @@ import time
 
 sqlite.UseDatabase("database")
 
+# Create users table if it doesn't exist
 def create_users_table():
-    
     pushWritepad(sqlite)
     
     # Check if the 'users' table already exists
     %users_table_if = SELECT name FROM sqlite_master WHERE type='table' AND name='users';
     table_exists = users_table_if.fetch()
     
+    # Create the table if it doesn't exist
     if table_exists == None:
         %CREATE TABLE users (\
             username TEXT PRIMARY KEY,\
@@ -18,10 +19,11 @@ def create_users_table():
             display_name TEXT,\
             last_login TEXT\
         );
-        current_time = time.time()
+        
+        # Create a default admin user
         %INSERT INTO users (username, password, display_name, last_login) \
-        VALUES ('admin', '255332&17197393981645110028255332', 'Administrator', ${current_time}); # password admin123
-
+        VALUES ('admin', '255332&17197393981645110028255332', 'Administrator', '');
+    
     popWritepad()
 
 def create_zones_table():
