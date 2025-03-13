@@ -49,6 +49,7 @@ def login_user():
     # Verify credentials
     %check = SELECT username, display_name, password FROM users WHERE username = ${username};
     user_data = check.fetch()
+    print(user_data)
 
     if user_data == None:
         popWritepad()

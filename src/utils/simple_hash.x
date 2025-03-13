@@ -14,6 +14,10 @@ def password_hash(password,salt):
 
 def password_check(password, hash_value):
     arr = hash_value.split("&")
+    print("----------------------")
+
+    print(password_hash(password,arr[0]))
+    print(hash_value)
     # 检查哈希值是否匹配
     if password_hash(password,arr[0]) == hash_value:
         return True
