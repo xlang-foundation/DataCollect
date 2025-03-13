@@ -3,7 +3,7 @@ import request from '@/utils/request'
 export interface LoginData {
   username: string
   password: string
-  display_name: string
+  display_name?: string
 }
 interface SignNameResponse {
   success: boolean
@@ -16,7 +16,7 @@ export interface UserInfo {
   last_login: number
 }
 
-export function login(data: LoginData) {
+export function login(data: LoginData):any {
   return request({
     url: '/api/user/login',
     method: 'post',
@@ -24,7 +24,7 @@ export function login(data: LoginData) {
   })
 }
 
-export function register(data: LoginData) {
+export function register(data: LoginData):any {
   return request({
     url: '/api/user/register',
     method: 'post',

@@ -106,7 +106,7 @@ const formatDate = (timestamp: number) => {
 const fetchUserList = async () => {
   try {
     loading.value = true
-    const data = await getUserList()
+    const data = await getUserList() as any
     userList.value = data
   } catch (error) {
     console.error('Failed to fetch users:', error)
@@ -129,7 +129,11 @@ const handleSubmit = async () => {
 
     try {
       submitLoading.value = true
-      await register(form.value.username, form.value.password, form.value.display_name)
+      await register({
+        username: form.value.username,
+        display_name: form.value.display_name,
+        password: form.value.password
+      })
       ElMessage.success('添加用户成功')
       dialogVisible.value = false
       fetchUserList()

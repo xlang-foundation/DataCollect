@@ -85,7 +85,7 @@ const handleLogin = async () => {
       const res = await login({
         username: loginForm.username,
         password: loginForm.password
-      })
+      } as any)
 
       // 保存token和用户信息
       localStorage.setItem('token', res.token)
