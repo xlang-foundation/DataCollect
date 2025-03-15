@@ -1,6 +1,12 @@
-# database.db
+database.db
 
 /api/*.jpg
 /api/*.png
+/api/*.bmp
+/api/*.gif
+/api/*.tiff
+/api/*.webp
+
+
 /api/*.json
 /storage
