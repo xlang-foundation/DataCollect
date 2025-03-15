@@ -498,6 +498,7 @@ def upload_file():
     name_token = None
     zone_id = None
     file_item = None
+    labels = []
     
     for item in body_items:
         if item["name"] == "name_token":
@@ -506,6 +507,8 @@ def upload_file():
             zone_id = int(item["content"].convert_to_str())
         elif item["name"] == "file":
             file_item = item
+        elif item["name"] == "labels":
+            labels = item["content"].convert_to_str().split(",")
     
     # 验证参数
     if name_token == None or zone_id == None or file_item == None:
@@ -513,17 +516,36 @@ def upload_file():
     
     # 验证zone_id是否存在
     pushWritepad(sqlite)
-    %check = SELECT id FROM zones WHERE id = ${zone_id};
+    %check = SELECT id,name FROM zones WHERE id = ${zone_id};
     zone_data = check.fetch()
     if zone_data == None:
         popWritepad()
         return [str({"success": False, "message": "Invalid zone_id"}, format=True), "text/json"]
     popWritepad()
-
+    zone_name = zone_data[1]
     # 验证name_token是否正确
     verify = simple_hash.verify_name(name_token)
     if verify != True:
         return [str({"success": False, "message": "Invalid name_token"}, format=True), "text/json"]
+    
+    # 从数据库获取所有有效的标签
+    pushWritepad(sqlite)
+    %labels_query = SELECT label FROM labels;
+    labels_data = []
+    row = labels_query.fetch()
+    while row != None:
+        labels_data.append(row[0])
+        row = labels_query.fetch()
+    popWritepad()
+    
+    # 过滤labels，只保留有效的标签
+    valid_labels = []
+    for label in labels:
+        if label in labels_data:
+            valid_labels.append(label)
+    
+    # 更新labels为已验证的标签列表
+    labels = valid_labels
     
     # 创建存储目录
     # timestamp = int(time.time())
@@ -551,8 +573,9 @@ def upload_file():
     metadata = {
         "original_filename": original_filename,
         "timestamp": timestamp,
-        "tags": [],  # 初始为空数组，可以后续添加标签
+        "labels": labels,  # 初始为空数组，可以后续添加标签
         "zone_id": zone_id,
+        "zone_name": zone_name,
         "name_token": name_token,
         "uploader_name": uploader_name[0],
         "file_path": file_path
