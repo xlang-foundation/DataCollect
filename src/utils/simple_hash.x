@@ -7,17 +7,13 @@ from '.' import random
 def password_hash(password,salt):
     if salt == None:
         salt = random.random_string() 
-    pwd = str(password.hash())
-    pwd_salt_str = ( pwd + salt)
+    pwd = str(password.md5())
+    pwd_salt_str = (pwd + salt).md5()
     pwd_hash = salt + "&" + pwd_salt_str
     return pwd_hash
 
 def password_check(password, hash_value):
     arr = hash_value.split("&")
-    print("----------------------")
-
-    print(password_hash(password,arr[0]))
-    print(hash_value)
     # 检查哈希值是否匹配
     if password_hash(password,arr[0]) == hash_value:
         return True
@@ -43,7 +39,7 @@ def verify_token(token):
     if int(code[1]) < int(time.time()):
         return False
     sign_str = code[0]+"|"+code[1]+"|"+token_secret
-    signature = str(sign_str.hash())
+    signature = str(sign_str.md5())
 
     if signature == code[2]:
         return True
@@ -57,7 +53,7 @@ def sign_token(username):
     current_time = time.time()
     expiration = int(current_time) + 3600 * 24 * 7
     sign_str = username + "|" + expiration + "|" + token_secret
-    signature = sign_str.hash()
+    signature = sign_str.md5()
     token = username + "|" + expiration+"|" + signature
     return token
 
@@ -85,7 +81,7 @@ def verify_name(token):
     code = token_decode(token)
     
     sign_str = code[0]+"|"+code[1]+"|"+name_secret
-    signature = str(sign_str.hash())
+    signature = str(sign_str.md5())
 
     if signature == code[2]:
         return True
@@ -97,6 +93,6 @@ def sign_name(username):
     current_time = time.time()
     expiration = int(current_time) + 3600 * 24 * 7
     sign_str = username + "-" + expiration + "-" + name_secret
-    signature = sign_str.hash()
+    signature = sign_str.md5()
     token = username + "-" + expiration+"-" + signature
     return token
