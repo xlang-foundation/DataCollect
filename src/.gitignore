@@ -1,1 +1,6 @@
 # database.db
+
+/api/*.jpg
+/api/*.png
+/api/*.json
+/storage
