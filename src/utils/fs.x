@@ -5,7 +5,11 @@ def read(path):
     data = f.read(f.size())
     f.close()
     return data
-
+def read_binary(path):
+    f = fs.File(path,"rb")
+    data = f.read(f.size())
+    f.close()
+    return data
 # read("test.txt")
 
 def write(path,data):
@@ -13,4 +17,7 @@ def write(path,data):
     f.write(data)
     f.close()
 
-write("test.txt","aaaaaaaaaaaaaaaaaaa")
+def write_binary(path,data):
+    f = fs.File(path,"wb")
+    f.write(data)
+    f.close()

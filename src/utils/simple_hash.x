@@ -71,16 +71,16 @@ name_secret = "7K9mPx2vL4nQ8sR1wY3jA5hC6tB0uD9fE2gN"
 
 # token decode
 def name_decode(token):
-    token = token.split("|")
+    token = token.split("-")
     if len(token) != 3:
         return False
     return token
 
 # 验证名称（验证名称的时候不需要验证时间）
 def verify_name(token):
-    code = token_decode(token)
+    code = name_decode(token)
     
-    sign_str = code[0]+"|"+code[1]+"|"+name_secret
+    sign_str = code[0]+"-"+code[1]+"-"+name_secret
     signature = str(sign_str.md5())
 
     if signature == code[2]:

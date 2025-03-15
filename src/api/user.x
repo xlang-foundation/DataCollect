@@ -3,8 +3,14 @@ from xlang_sqlite import sqlite
 from xlang_yaml import yaml
 from '../utils' import simple_hash
 from '../utils' import auth
-import time
+from '../utils' import fs as utilsfs
 from xlang_os import fs
+import time
+
+def write_binary(path,data):
+    f = fs.File(path,"wb")
+    f.write(data)
+    f.close()
 
 # Initialize database 初始化数据库
 sqlite.UseDatabase("../database")
@@ -513,50 +519,53 @@ def upload_file():
         popWritepad()
         return [str({"success": False, "message": "Invalid zone_id"}, format=True), "text/json"]
     popWritepad()
+
+    # 验证name_token是否正确
+    verify = simple_hash.verify_name(name_token)
+    if verify != True:
+        return [str({"success": False, "message": "Invalid name_token"}, format=True), "text/json"]
     
     # 创建存储目录
-    timestamp = int(time.time())
-    storage_dir = f"storage/files/{zone_id}/{timestamp}"
-    folder = fs.Folder(storage_dir)
-    if not folder.Exists():
-        folder.CreateFolder(storage_dir)
+    # timestamp = int(time.time())
+    timestamp= str(time.time()).replace(".", "")
+    storage_dir = "storage/files/${timestamp}"
+
     
     # 保存文件
     original_filename = file_item["filename"]
-    file_extension = original_filename[original_filename.rfind("."):]
-    file_path = f"{storage_dir}/{timestamp}{file_extension}"
+    file_extension = original_filename.split(".")
+    # 如果长度小于2，说明没有后缀名
+    if len(file_extension) < 2:
+        file_extension = ""
+    else:
+        file_extension = "." + file_extension[len(file_extension)-1]
+
+    file_path = "${timestamp}${file_extension}"
+    binary = file_item["content"]
+    write_binary(file_path,binary)
+
+    # 从name_token解析上传者名称
+    uploader_name = simple_hash.name_decode(name_token)
     
-    # 保存二进制文件
-    file_obj = fs.File(file_path, "wb")
-    is_ok = file_obj.write(file_item["content"])
-    file_obj.close()
-    
-    if not is_ok:
-        return [str({"success": False, "message": "Failed to save file"}, format=True), "text/json"]
-    
-    # 保存元数据JSON
+    # 准备元信息
     metadata = {
         "original_filename": original_filename,
         "timestamp": timestamp,
+        "tags": [],  # 初始为空数组，可以后续添加标签
         "zone_id": zone_id,
         "name_token": name_token,
+        "uploader_name": uploader_name[0],
         "file_path": file_path
     }
     
-    json_path = f"{storage_dir}/{timestamp}.json"
-    json_file = fs.File(json_path, "w")
-    is_ok = json_file.write(str(metadata, format=True))
-    json_file.close()
+    # 创建并写入元信息JSON文件
+    json_path = "${timestamp}.json"
+    json_content = str(metadata, format=True)
+    write_binary(json_path, json_content)
     
-    if not is_ok:
-        return [str({"success": False, "message": "Failed to save metadata"}, format=True), "text/json"]
-    
+    # 返回成功响应
     return [str({
         "success": True,
         "message": "File uploaded successfully",
-        "data": {
-            "file_path": file_path,
-            "metadata": metadata
-        }
+        "file_info": metadata
     }, format=True), "text/json"]
-
