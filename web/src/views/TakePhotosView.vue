@@ -345,6 +345,10 @@ function deleteItem() {
 }
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
+import { uploadFile } from "@/api/uploadFile";
+import { useRouter } from "vue-router";
+
+const router = useRouter()
 
 const  handleFileChange: UploadProps['onChange'] = async (file) => {
   // 将文件转成ItemStruct添加进数据库
@@ -378,8 +382,54 @@ const handleExceed = (files: UploadRawFile[], fileList: UploadRawFile[]) => {
   file.uid = genFileId()
   upload.value!.handleStart(file)
 };
-const submitUpload = () => {
+const submitUpload = async () => {
+  if (images.value.length === 0) {
+    ElMessage.warning('没有待上传的图片')
+    return
+  }
 
+  try {
+    for (const image of images.value) {
+      // 将base64转换为File对象
+      const response = await fetch(image.dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `photo_${image.shotTime}.jpg`, { type: 'image/jpeg' });
+
+      // 准备labels字符串
+      const labelsStr = (image.labels || []).join(',');
+
+      // 从store中获取name_token和zone_id
+      const name_token = localStorage.getItem('name_token') || '';
+      if (name_token === '') {
+        ElMessage.warning('获取name_token失败，请从邀请链接访问。');
+        return
+      }
+      const zoneId = router.currentRoute.value.params.zoneId as string;
+
+      try {
+        // 上传文件
+        await uploadFile(name_token, zoneId, file, labelsStr);
+
+        // 上传成功后从本地存储中删除
+        await imageStore.removeItem(image.id.toString());
+
+        // 从images数组中移除
+        const index = images.value.findIndex(item => item.id === image.id);
+        if (index !== -1) {
+          images.value.splice(index, 1);
+        }
+
+        ElMessage.success('上传成功');
+      } catch (error: any) {
+        ElMessage.error(`上传失败: ${error.message}`);
+      }
+    }
+
+    // 关闭预览窗口
+    drawer.value = false;
+  } catch (error: any) {
+    ElMessage.error(`上传过程出错: ${error.message}`);
+  }
 }
 
 // 处理标签变更
