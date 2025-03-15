@@ -1,8 +1,10 @@
+
 from xlang_sqlite import sqlite
 from xlang_yaml import yaml
 from '../utils' import simple_hash
 from '../utils' import auth
 import time
+from xlang_os import fs
 
 # Initialize database 初始化数据库
 sqlite.UseDatabase("../database")
@@ -479,3 +481,82 @@ def sign_name_token():
     }, format=True), "text/json"]
 
 # ---------------------------------------------------FileUpdate---------------------------------------------------
+
+# API: Upload File
+@srv.route("/api/file/upload")
+def upload_file():
+    # 验证name_token
+    body_items = req.body  # List of dicts: [{name, content, filename, content_type}]
+    
+    # 获取参数
+    name_token = None
+    zone_id = None
+    file_item = None
+    
+    for item in body_items:
+        if item["name"] == "name_token":
+            name_token = item["content"].convert_to_str()
+        elif item["name"] == "zone_id":
+            zone_id = int(item["content"].convert_to_str())
+        elif item["name"] == "file":
+            file_item = item
+    
+    # 验证参数
+    if name_token == None or zone_id == None or file_item == None:
+        return [str({"success": False, "message": "Missing required parameters"}, format=True), "text/json"]
+    
+    # 验证zone_id是否存在
+    pushWritepad(sqlite)
+    %check = SELECT id FROM zones WHERE id = ${zone_id};
+    zone_data = check.fetch()
+    if zone_data == None:
+        popWritepad()
+        return [str({"success": False, "message": "Invalid zone_id"}, format=True), "text/json"]
+    popWritepad()
+    
+    # 创建存储目录
+    timestamp = int(time.time())
+    storage_dir = f"storage/files/{zone_id}/{timestamp}"
+    folder = fs.Folder(storage_dir)
+    if not folder.Exists():
+        folder.CreateFolder(storage_dir)
+    
+    # 保存文件
+    original_filename = file_item["filename"]
+    file_extension = original_filename[original_filename.rfind("."):]
+    file_path = f"{storage_dir}/{timestamp}{file_extension}"
+    
+    # 保存二进制文件
+    file_obj = fs.File(file_path, "wb")
+    is_ok = file_obj.write(file_item["content"])
+    file_obj.close()
+    
+    if not is_ok:
+        return [str({"success": False, "message": "Failed to save file"}, format=True), "text/json"]
+    
+    # 保存元数据JSON
+    metadata = {
+        "original_filename": original_filename,
+        "timestamp": timestamp,
+        "zone_id": zone_id,
+        "name_token": name_token,
+        "file_path": file_path
+    }
+    
+    json_path = f"{storage_dir}/{timestamp}.json"
+    json_file = fs.File(json_path, "w")
+    is_ok = json_file.write(str(metadata, format=True))
+    json_file.close()
+    
+    if not is_ok:
+        return [str({"success": False, "message": "Failed to save metadata"}, format=True), "text/json"]
+    
+    return [str({
+        "success": True,
+        "message": "File uploaded successfully",
+        "data": {
+            "file_path": file_path,
+            "metadata": metadata
+        }
+    }, format=True), "text/json"]
+
