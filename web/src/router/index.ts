@@ -7,6 +7,25 @@ const router = createRouter({
   // history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/',
+      redirect: '/admin'
+    },
+    {
+      path: '/zone/:zoneId',
+      name: 'zone-zoneId',
+      component: () => import('../views/ZoneView.vue'),
+    },
+    {
+      path: '/zone',
+      name: 'zone',
+      component: () => import('../views/ZoneView.vue'),
+    },
+    {
+      path: '/takePhoto/:zoneId',
+      name: 'takePhoto-zoneId',
+      component: () => import('../views/TakePhotosView.vue'),
+    },
+    {
       path: '/admin/login',
       name: 'AdminLogin',
       component: () => import('@/views/admin/login/index.vue'),
@@ -57,25 +76,6 @@ const router = createRouter({
           }
         }
       ]
-    },
-    {
-      path: '/',
-      redirect: '/admin'
-    },
-    {
-      path: '/zone/:zoneId',
-      name: 'zone-zoneId',
-      component: () => import('../views/ZoneView.vue'),
-    },
-    {
-      path: '/zone',
-      name: 'zone',
-      component: () => import('../views/ZoneView.vue'),
-    },
-    {
-      path: '/takePhoto/:zoneId',
-      name: 'takePhoto-zoneId',
-      component: () => import('../views/TakePhotosView.vue'),
     }
   ]
 })
