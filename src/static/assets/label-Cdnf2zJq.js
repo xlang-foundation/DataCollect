@@ -1,1 +1,0 @@
-import{r as t}from"./request-CDyB1Aj0.js";const r=()=>t({url:"/api/label/list",method:"get"}),d=e=>t({url:"/api/label/add",method:"post",data:{label:e}}),s=e=>t({url:"/api/label/delete",method:"post",data:{id:e}}),o=(e,a)=>t({url:"/api/label/update",method:"post",data:{id:e,label:a}});export{d as a,s as d,r as g,o as u};
