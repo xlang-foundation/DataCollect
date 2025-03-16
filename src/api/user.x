@@ -478,7 +478,7 @@ def sign_name_token():
         return [str({"success": False, "message": "The name cannot be empty"}, format=True), "text/json"]
 
     # 生成名称token
-    name_token = simple_hash.sign_name(name)
+    name_token = simple_hash.sign_name(str(name))
     
     return [str({
         "success": True,
