@@ -111,6 +111,10 @@ import { usePhotoStore } from "@/stores/photo.ts"
 import { ElMessage } from "element-plus";
 import { getLabelList, type LabelInfo } from '@/api/label';
 import { Refresh } from '@element-plus/icons-vue'
+import { genFileId } from 'element-plus'
+import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
+import { uploadFile } from "@/api/uploadFile";
+import { useRouter } from "vue-router";
 
 function nextDevice(){
   if (currentCamera.value) {
@@ -173,8 +177,6 @@ const cameraList: Ref<{
   value: string;
   deviceInfo: MediaDeviceInfo;
 }[]> = ref([])
-function getDevices() {
-  navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleError);
 async function getDevices() {
   try {
     // 检查mediaDevices API是否可用
@@ -365,10 +367,7 @@ function deleteItem() {
    })
   }
 }
-import { genFileId } from 'element-plus'
-import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
-import { uploadFile } from "@/api/uploadFile";
-import { useRouter } from "vue-router";
+
 
 const router = useRouter()
 
