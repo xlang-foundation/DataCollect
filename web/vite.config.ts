@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts:["gaoyi.free.svipss.top"],
+    allowedHosts:["www.ufo3.com","ufo3.com"],
     proxy: {
       '/api': {
         target: 'http://localhost:18080',
