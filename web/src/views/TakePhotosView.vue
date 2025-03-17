@@ -175,8 +175,30 @@ const cameraList: Ref<{
 }[]> = ref([])
 function getDevices() {
   navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleError);
+async function getDevices() {
+  try {
+    // 检查mediaDevices API是否可用
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      throw new Error('浏览器不支持mediaDevices API');
+    }
+
+    // 先请求摄像头权限
+    await navigator.mediaDevices.getUserMedia({ video: true });
+
+    // 然后枚举设备
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    gotDevices(devices);
+  } catch (error) {
+    handleError(error);
+    ElMessage.error('获取摄像头失败，请确保已授予摄像头权限');
+  }
 }
 getDevices()
+
+// 在mounted时调用
+onMounted(() => {
+  getDevices();
+});
 
 watch(currentCamera, (newValue, oldValue) => {
   if (newValue) {
