@@ -4,6 +4,9 @@
     label-width="auto"
     class="centered-container"
   >
+    <el-form-item label="名称：" label-position="top">
+      <div>{{ form.name }}</div>
+    </el-form-item>
     <el-form-item label="工作区：" label-position="top">
       <el-select v-model="form.selectZoneId" placeholder="请选择工作区域" :disabled="Boolean(route.params.zoneId)">
           <el-option v-for="item in form.zoneList" :key="item.id"  :label="item.name" :value="item.id"></el-option>
@@ -27,7 +30,14 @@ const router = useRouter()
 
 const form = reactive({
   zoneList: [] as ZoneInfo[],
-  selectZoneId: undefined as number | undefined
+  selectZoneId: undefined as number | undefined,
+  name: '' // 添加name字段
+})
+
+// 在组件挂载时获取name_token并处理
+onMounted(() => {
+  const nameToken = localStorage.getItem('name_token') || ''
+  form.name = nameToken.split('-')[0]
 })
 
 const onSubmit = () => {
