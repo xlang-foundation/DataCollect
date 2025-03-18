@@ -403,14 +403,48 @@ const handleExceed = (files: UploadRawFile[], fileList: UploadRawFile[]) => {
   file.uid = genFileId()
   upload.value!.handleStart(file)
 };
+// 上传状态管理
+const uploadStatus = ref({
+  isUploading: false,
+  current: 0,
+  total: 0,
+  success: 0,
+  failed: 0
+})
+
 const submitUpload = async () => {
   if (images.value.length === 0) {
     ElMessage.warning('没有待上传的图片')
     return
   }
 
-  try {
-    for (const image of images.value) {
+  // 初始化上传状态
+  uploadStatus.value = {
+    isUploading: true,
+    current: 0,
+    total: images.value.length,
+    success: 0,
+    failed: 0
+  }
+
+  // 从store中获取name_token和zone_id
+  const name_token = localStorage.getItem('name_token') || '';
+  if (name_token === '') {
+    ElMessage.warning('获取name_token失败，请从邀请链接访问。');
+    return
+  }
+  const zoneId = router.currentRoute.value.params.zoneId as string;
+
+  // 创建上传队列
+  const uploadQueue = [...images.value];
+
+  while (uploadQueue.length > 0 && uploadStatus.value.isUploading) {
+    const image = uploadQueue.shift();
+    if (!image) continue;
+
+    uploadStatus.value.current++;
+
+    try {
       // 将base64转换为File对象
       const response = await fetch(image.dataUrl);
       const blob = await response.blob();
@@ -419,38 +453,40 @@ const submitUpload = async () => {
       // 准备labels字符串
       const labelsStr = (image.labels || []).join(',');
 
-      // 从store中获取name_token和zone_id
-      const name_token = localStorage.getItem('name_token') || '';
-      if (name_token === '') {
-        ElMessage.warning('获取name_token失败，请从邀请链接访问。');
-        return
+      // 上传文件
+      await uploadFile(name_token, zoneId, file, labelsStr);
+
+      // 上传成功后从本地存储中删除
+      await imageStore.removeItem(image.id.toString());
+
+      // 从images数组中移除
+      const index = images.value.findIndex(item => item.id === image.id);
+      if (index !== -1) {
+        images.value.splice(index, 1);
       }
-      const zoneId = router.currentRoute.value.params.zoneId as string;
 
-      try {
-        // 上传文件
-        await uploadFile(name_token, zoneId, file, labelsStr);
+      uploadStatus.value.success++;
 
-        // 上传成功后从本地存储中删除
-        await imageStore.removeItem(image.id.toString());
-
-        // 从images数组中移除
-        const index = images.value.findIndex(item => item.id === image.id);
-        if (index !== -1) {
-          images.value.splice(index, 1);
-        }
-
-        ElMessage.success('上传成功');
-      } catch (error: any) {
-        ElMessage.error(`上传失败: ${error.message}`);
+    } catch (error: any) {
+      uploadStatus.value.failed++;
+      ElMessage.error(`图片 ${uploadStatus.value.current}/${uploadStatus.value.total} 上传失败: ${error.message}`);
+      // 将失败的图片放回队列末尾，最多重试3次
+      if (!image.retryCount || image.retryCount < 3) {
+        image.retryCount = (image.retryCount || 0) + 1;
+        uploadQueue.push(image);
       }
     }
-
-    // 关闭预览窗口
-    drawer.value = false;
-  } catch (error: any) {
-    ElMessage.error(`上传过程出错: ${error.message}`);
   }
+
+  // 上传完成
+  uploadStatus.value.isUploading = false;
+
+  if (uploadStatus.value.success > 0) {
+    ElMessage.success(`上传完成！成功：${uploadStatus.value.success}，失败：${uploadStatus.value.failed}`);
+  }
+
+  // 关闭预览窗口
+  drawer.value = false;
 }
 
 // 处理标签变更
