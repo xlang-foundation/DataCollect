@@ -16,7 +16,7 @@ export function uploadFile(name_token: string,zone_id: string,file: File,labels:
   data.append('labels', labels)
   // 这是axios的请求
   return request({
-    url: '/api/upload',
+    url: '/api/file/upload',
     method: 'post',
     data,
     headers: { 'Content-Type': 'multipart/form-data' }
