@@ -1,104 +1,116 @@
+
 <template>
   <div class="take-photos-view">
-    <video v-show="!drawer" id="video" playsinline autoplay></video>
-    <div class="imgdrawer-box" v-show="drawer">
-      <img class="imgdrawer" ref="imgdrawer" :src="currentItem?.dataUrl" alt="">
-      <div class="img-info">
+    <!-- 相机预览区 -->
+    <div class="camera-container">
+      <video v-show="!drawer" id="video" playsinline autoplay></video>
+      <el-button class="camera-select" :icon="Refresh" circle @click="nextDevice" />
+    </div>
 
-        <div class="location blur-background">
-          <div>纬度:{{currentItem?.gps?.coords?.latitude}}</div>
-          <div>经度:{{currentItem?.gps?.coords?.longitude}}</div>
+    <!-- 预览抽屉 -->
+    <div class="preview-drawer" v-show="drawer">
+      <img class="preview-image" ref="imgdrawer" :src="currentItem?.dataUrl" alt="">
+      <div class="preview-info">
+        <!-- GPS信息 -->
+        <div class="info-section">
+          <div class="location-info blur-panel">
+            <div class="info-row">纬度: {{currentItem?.gps?.coords?.latitude}}</div>
+            <div class="info-row">经度: {{currentItem?.gps?.coords?.longitude}}</div>
+          </div>
+          <div class="time-info blur-panel">GPS Time: {{currentItem?.gps?.timestamp}}</div>
         </div>
-        <div class="time blur-background">GPS Time:{{currentItem?.gps?.timestamp}}</div>
-        <div  style="
-          gap: 2px;
-          margin-top: 1em;
-          display: flex;
-          flex-wrap: wrap;"
-        >
-          <div v-for="(label, index) in labels" :key="index">
-            <el-check-tag :checked="label.checked" @change="(status)=>{
-              handleLabelChange(label,status)
-            }">
-              {{ label.checked ? '✅' : '' }}
-              {{label.label}}
+
+        <!-- 标签选择区 -->
+        <div class="tags-container blur-panel">
+          <div v-for="(label, index) in labels" :key="index" class="tag-item">
+            <el-check-tag
+              :checked="label.checked"
+              @change="(status)=>handleLabelChange(label,status)"
+            >
+              {{ label.checked ? '✓' : '' }} {{label.label}}
             </el-check-tag>
           </div>
         </div>
+
+        <!-- 删除按钮 -->
         <el-popconfirm title="确认删除?" @confirm="deleteItem">
           <template #reference>
-            <el-button class="delete-item" type="danger">删除</el-button>
+            <el-button class="delete-button" type="danger" round>删除照片</el-button>
           </template>
         </el-popconfirm>
-
       </div>
-
     </div>
 
-
-    <el-button class="camera-select" :icon="Refresh" circle @click="nextDevice" />
-    <!-- 在网页底部居中添加一个拍照按钮 -->
-      <el-button
-        class="shot-btn"
-        type="danger"
-        @click="takePhoto"
-      >
-        拍照
-      </el-button>
-
-      <el-button
-        class="upload-btn"
-        type="success"
-        @click="submitUpload"
-      >
-        上传
-      </el-button>
-      <el-upload
-        ref="upload"
-        :show-file-list="false"
-        class="select-from-phone-btn"
-        accept="image/jpeg, image/png, image/gif, image/*"
-        action=""
-        :limit="1"
-        @change="handleFileChange"
-        :auto-upload="false"
-      >
-        <template #trigger>
-          <el-button type="primary">从手机中选择</el-button>
-        </template>
-      </el-upload>
-    <!-- 添加一个按钮跳转到列表页 -->
-      <!-- <el-button
-        class="list-btn"
-        type="primary"
-        @click="()=>{
-          $router.push({
-            path: '/photoList'
-          })
-
-        }"
-      >
-        相册
-      </el-button> -->
-
-    <p style="padding-left: 8px;">待上传列表: </p>
-    <div class="grid-container">
-      <div
-        v-for="(image, index) in images"
-        :key="index"
-        class="grid-item"
-        @click="openPreview(image)"
-      >
-        <div class="image-wrapper">
-          <img
-            :src="image.dataUrl"
-            alt="photo"
-            class="square-image"
+    <!-- 底部控制区 -->
+    <div class="bottom-controls">
+      <!-- 缩略图预览 -->
+      <div class="thumbnail-section">
+        <div class="thumbnail-header">待上传列表 ({{images.length}})</div>
+        <div class="thumbnail-list">
+          <div
+            v-for="(image, index) in images"
+            :key="index"
+            class="thumbnail-item"
+            @click="openPreview(image)"
           >
+            <img :src="image.dataUrl" alt="photo" class="thumbnail-image">
+          </div>
         </div>
       </div>
-    </div>
 
+      <!-- 操作按钮组 -->
+      <div class="action-buttons">
+        <el-button
+          class="action-btn camera-btn"
+          type="danger"
+          round
+          size="large"
+          @click="takePhoto"
+        >
+          <el-icon><Camera /></el-icon>
+          拍照
+        </el-button>
+
+        <el-button
+          class="action-btn upload-btn"
+          type="success"
+          round
+          size="large"
+          @click="submitUpload"
+          :loading="uploadStatus.isUploading"
+        >
+          <el-icon><Upload /></el-icon>
+          {{ uploadStatus.isUploading ? '上传中...' : '上传' }}
+        </el-button>
+
+        <el-upload
+          ref="upload"
+          :show-file-list="false"
+          class="action-btn select-btn"
+          accept="image/jpeg, image/png, image/gif, image/*"
+          action=""
+          :limit="1"
+          @change="handleFileChange"
+          :auto-upload="false"
+        >
+          <template #trigger>
+            <el-button type="primary" round size="large">
+              <el-icon><Picture /></el-icon>
+              选择照片
+            </el-button>
+          </template>
+        </el-upload>
+      </div>
+
+      <!-- 上传进度 -->
+      <div v-if="uploadStatus.isUploading" class="upload-progress">
+        <el-progress
+          :percentage="Math.floor((uploadStatus.current / uploadStatus.total) * 100)"
+          :format="format"
+          :stroke-width="8"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -110,11 +122,16 @@ import { blobToDataURL } from "@/utils/dataUrlTools";
 import { usePhotoStore } from "@/stores/photo.ts"
 import { ElMessage } from "element-plus";
 import { getLabelList, type LabelInfo } from '@/api/label';
-import { Refresh } from '@element-plus/icons-vue'
+import { Refresh, Camera, Upload, Picture } from '@element-plus/icons-vue'
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import { uploadFile } from "@/api/uploadFile";
 import { useRouter } from "vue-router";
+
+// 格式化进度显示
+const format = (percentage: number) => {
+  return `${uploadStatus.value.current}/${uploadStatus.value.total} (${percentage}%)`
+}
 
 function nextDevice(){
   if (currentCamera.value) {
@@ -154,6 +171,7 @@ type ItemStruct = {
   };
   shotTime: number;
   labels?: string[];
+  retryCount?: number;
 };
 // 图片列表
 const images = ref<ItemStruct[]>([]);
@@ -218,10 +236,6 @@ watch(currentCamera, (newValue, oldValue) => {
         deviceId: newValue.deviceInfo.deviceId
       }
     }).then(function (stream) {
-      // 将流赋值给video
-      // if (video.value !== null) {
-      //   video.value.srcObject = stream;
-      // }
       const videoDom = document.getElementById('video') as any
       videoDom.srcObject = stream;
     }).catch(handleError);
@@ -247,10 +261,9 @@ function openPreview(image: ItemStruct) {
       console.error(error);
     });
   }
-
 }
-function gotDevices(deviceInfos:MediaDeviceInfo[]) {
 
+function gotDevices(deviceInfos:MediaDeviceInfo[]) {
   // 从中找到后置摄像头放进cameraList中
   for (let i = 0; i !== deviceInfos.length; ++i) {
     const deviceInfo = deviceInfos[i];
@@ -317,12 +330,11 @@ function takePhoto() {
           labels: [],
         }
 
-
         // 存储图片到数据库
         imageStore.setItem(image.id.toString(), image).then(() => {
           console.log('Image stored successfully');
           ElMessage({
-            message: 'mage stored successfully',
+            message: '照片已保存',
             type: 'success',
           })
           images.value.push(image);
@@ -330,7 +342,7 @@ function takePhoto() {
           drawer.value = true
         }).catch((error:any) => {
           ElMessage({
-            message:'Error storing image:'+ error.message,
+            message:'保存照片失败:'+ error.message,
             type: 'error',
           })
         });
@@ -353,25 +365,22 @@ function deleteItem() {
       if (index !== -1) {
         images.value.splice(index, 1);
       }
-      // element-plus提示删除成功
-
       ElMessage({
-        message: 'Image removed successfully',
+        message: '照片已删除',
         type: 'success',
       })
       drawer.value = false
    }).catch((error) => {
-     ElMessage.error('Error removing image:', error)
+     ElMessage.error('删除照片失败:', error)
    }).finally(()=>{
     drawer.value = false
    })
   }
 }
 
-
 const router = useRouter()
 
-const  handleFileChange: UploadProps['onChange'] = async (file) => {
+const handleFileChange: UploadProps['onChange'] = async (file) => {
   // 将文件转成ItemStruct添加进数据库
   if (file.raw) {
     const id = uuidv4()
@@ -393,9 +402,8 @@ const  handleFileChange: UploadProps['onChange'] = async (file) => {
     currentItem.value = image
     drawer.value = true
   }
-
-
 }
+
 const upload = ref<UploadInstance | null>(null);
 const handleExceed = (files: UploadRawFile[], fileList: UploadRawFile[]) => {
   upload.value!.clearFiles()
@@ -403,6 +411,7 @@ const handleExceed = (files: UploadRawFile[], fileList: UploadRawFile[]) => {
   file.uid = genFileId()
   upload.value!.handleStart(file)
 };
+
 // 上传状态管理
 const uploadStatus = ref({
   isUploading: false,
@@ -522,112 +531,218 @@ const handleLabelChange = async (label: LabelInfo, status: boolean) => {
 </script>
 
 <style scoped>
-.camera-select{
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 999;
-}
-
 .take-photos-view {
   width: 100%;
-  height: 100%;
-}
-#video {
-  width: 100%;
-  height: 100%;
-  background-color: dimgrey;
-}
-/* 拍照按钮 */
-.shot-btn{
-  position: fixed;
-  bottom: 50px;
-  left: 20%;
-  transform: translateX(-50%);
-  z-index: 999;
-}
-/* 上传按钮 */
-.upload-btn{
-  position: fixed;
-  bottom: 50px;
-  left: 40%;
-  transform: translateX(-50%);
-  z-index: 999;
-}
-/* 从手机中选择按钮 */
-.select-from-phone-btn{
-  position: fixed;
-  bottom: 50px;
-  left: 75%;
-  transform: translateX(-50%);
-  z-index: 999;
-}
-
-.grid-container {
-  /* display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  padding: 8px;
-  margin-bottom: 100px; */
-
-  /* 改为flex布局 */
-  display: flex;
-  overflow-x: auto;  /* 允许横向滚动 */
-  flex-wrap: nowrap; /* 禁止换行 */
-  padding: 8px;
-  gap: 8px;
-  margin-bottom: 100px;
-  -webkit-overflow-scrolling: touch; /* 移动端滚动优化 */
-}
-
-/* 为每个grid项设置固定宽度 */
-.grid-item {
-  flex: 0 0 auto; /* 禁止伸缩 */
-  width: 70px;   /* 设置项目宽度，根据实际情况调整 */
-  height: 70px;
-}
-.grid-item
-.image-wrapper {
-  width: 100%;    /* 宽度占满父容器 */
-  height: 100%;  /* 固定高度，根据宽度自动保持正方形 */
+  height: 100vh;
+  background-color: #000;
   position: relative;
   overflow: hidden;
 }
 
-.square-image {
+/* 相机预览区 */
+.camera-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: #1a1a1a;
+}
+
+/* 相机切换按钮 */
+.camera-select {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 999;
+  width: 48px;
+  height: 48px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.camera-select:active {
+  transform: scale(0.95);
+  background: rgba(255,255,255,0.3);
+}
+
+/* 预览抽屉 */
+.preview-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  z-index: 1000;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.preview-info {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover; /* 图片填充模式 */
-  object-position: center;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
 }
-.imgdrawer-box{
-  width: 100%;
-  position: relative;
-}
-.imgdrawer{
-  width: 100%;
-}
-.img-info{
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  top: 0;
-}
-/* 毛玻璃背景 */
-.blur-background {
-  width: fit-content;
-  background-color: rgba(89, 89, 89, 0.25);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  box-shadow: rgba(14, 14, 14, 0.19) 0px 6px 15px 0px;
-  -webkit-box-shadow: rgba(14, 14, 14, 0.19) 0px 6px 15px 0px;
+
+/* 信息面板 */
+.blur-panel {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px 16px;
   color: #fff;
+  margin-bottom: 12px;
 }
-.delete-item{
-  bottom: 5px;
+
+.info-section {
+  margin-bottom: 20px;
+}
+
+.info-row {
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+/* 标签容器 */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 55px;
+}
+
+.tag-item :deep(.el-check-tag) {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  border-radius: 20px;
+  padding: 6px 12px;
+  transition: all 0.3s;
+}
+
+.tag-item :deep(.el-check-tag.is-checked) {
+  background: rgba(64,158,255,0.25);
+}
+
+/* 底部控制区 */
+.bottom-controls {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+  z-index: 999;
+  box-sizing: border-box;
+}
+
+/* 缩略图区域 */
+.thumbnail-section {
+  margin-bottom: 20px;
+}
+
+.thumbnail-header {
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 12px;
+  padding-left: 4px;
+}
+
+.thumbnail-list {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  padding: 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.thumbnail-list::-webkit-scrollbar {
+  display: none;
+}
+
+.thumbnail-item {
+  flex: 0 0 auto;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: transform 0.3s;
+}
+
+.thumbnail-item:active {
+  transform: scale(0.95);
+}
+
+.thumbnail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 操作按钮组 */
+.action-buttons {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.action-btn {
+  min-width: 100px;
+}
+
+.action-btn :deep(.el-icon) {
+  margin-right: 4px;
+  font-size: 18px;
+}
+
+/* 上传进度 */
+.upload-progress {
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0 20px;
+}
+
+:deep(.el-progress-bar__outer) {
+  background-color: rgba(255,255,255,0.1) !important;
+}
+
+:deep(.el-progress-bar__inner) {
+  background: linear-gradient(90deg, #2ed573 0%, #7bed9f 100%);
+}
+
+:deep(.el-progress__text) {
+  color: #fff !important;
+}
+
+/* 删除按钮 */
+.delete-button {
   position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 120px;
 }
 </style>
