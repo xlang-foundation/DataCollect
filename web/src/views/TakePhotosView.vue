@@ -20,6 +20,24 @@
           <div class="time-info blur-panel">GPS Time: {{currentItem?.gps?.timestamp}}</div>
         </div>
 
+        <div>
+
+        <!-- 缩略图预览 -->
+        <div class="thumbnail-section blur-panel">
+          <div class="thumbnail-header">待上传列表 ({{images.length}})</div>
+          <div class="thumbnail-list">
+            <div
+              v-for="(image, index) in images"
+              :key="index"
+              class="thumbnail-item"
+              @click="openPreview(image)"
+            >
+              <img :src="image.dataUrl" alt="photo" class="thumbnail-image">
+            </div>
+          </div>
+        </div>
+
+
         <!-- 标签选择区 -->
         <div class="tags-container blur-panel">
           <div v-for="(label, index) in labels" :key="index" class="tag-item">
@@ -32,12 +50,41 @@
           </div>
         </div>
 
-        <!-- 删除按钮 -->
-        <el-popconfirm title="确认删除?" @confirm="deleteItem">
-          <template #reference>
-            <el-button class="delete-button" type="danger" round>删除照片</el-button>
-          </template>
-        </el-popconfirm>
+        <!-- 预览操作按钮组 -->
+        <div class="preview-action-buttons blur-panel">
+          <el-popconfirm title="确认删除?" @confirm="deleteItem">
+            <template #reference>
+              <el-button class="preview-btn" type="danger" round size="large">
+                <el-icon><Delete /></el-icon>
+                删除
+              </el-button>
+            </template>
+          </el-popconfirm>
+
+          <el-button
+            class="preview-btn"
+            type="success"
+            round
+            size="large"
+            @click="submitUpload"
+            :loading="uploadStatus.isUploading"
+          >
+            <el-icon><Upload /></el-icon>
+            {{ uploadStatus.isUploading ? '上传中...' : '上传' }}
+          </el-button>
+
+          <el-button
+            class="preview-btn"
+            type="info"
+            round
+            size="large"
+            @click="drawer = false"
+          >
+            <el-icon><Back /></el-icon>
+            返回
+          </el-button>
+        </div>
+      </div>
       </div>
     </div>
 
@@ -69,18 +116,6 @@
         >
           <el-icon><Camera /></el-icon>
           拍照
-        </el-button>
-
-        <el-button
-          class="action-btn upload-btn"
-          type="success"
-          round
-          size="large"
-          @click="submitUpload"
-          :loading="uploadStatus.isUploading"
-        >
-          <el-icon><Upload /></el-icon>
-          {{ uploadStatus.isUploading ? '上传中...' : '上传' }}
         </el-button>
 
         <el-upload
@@ -122,7 +157,8 @@ import { blobToDataURL } from "@/utils/dataUrlTools";
 import { usePhotoStore } from "@/stores/photo.ts"
 import { ElMessage } from "element-plus";
 import { getLabelList, type LabelInfo } from '@/api/label';
-import { Refresh, Camera, Upload, Picture } from '@element-plus/icons-vue'
+import { Refresh, Camera, Upload, Picture, Delete, Back } from '@element-plus/icons-vue'
+
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import { uploadFile } from "@/api/uploadFile";
@@ -293,7 +329,7 @@ function gotDevices(deviceInfos:MediaDeviceInfo[]) {
   // 默认选中第一个摄像头
   currentCamera.value = cameraList.value[0];
 }
-function handleError(error: { message: any; name: any; }) {
+function handleError(error: any) {
   console.log('navigator.MediaDevices.getUserMedia error: ', error.message, error.name);
 }
 
@@ -626,7 +662,27 @@ const handleLabelChange = async (label: LabelInfo, status: boolean) => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 55px;
+  margin-bottom: 16px;
+}
+/* 预览操作按钮组 */
+.preview-action-buttons {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 12px;
+  margin: 0 20px 20px;
+  padding: 12px;
+}
+
+.preview-btn {
+  flex: 1;
+  height: 44px;
+  font-size: 16px;
+}
+
+.preview-btn :deep(.el-icon) {
+  margin-right: 4px;
+  font-size: 18px;
 }
 
 .tag-item :deep(.el-check-tag) {
@@ -737,12 +793,4 @@ const handleLabelChange = async (label: LabelInfo, status: boolean) => {
   color: #fff !important;
 }
 
-/* 删除按钮 */
-.delete-button {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 120px;
-}
 </style>
