@@ -9,7 +9,7 @@
 
     <!-- 预览抽屉 -->
     <div class="preview-drawer" v-show="drawer">
-      <img class="preview-image" ref="imgdrawer" :src="currentItem?.dataUrl" alt="">
+      <img class="preview-image" ref="imgdrawer"  @click="toggleFullscreen" :src="currentItem?.dataUrl" alt="">
       <div class="preview-info">
         <!-- GPS信息 -->
         <div class="info-section">
@@ -18,6 +18,9 @@
             <div class="info-row">经度: {{currentItem?.gps?.coords?.longitude}}</div>
           </div>
           <div class="time-info blur-panel">GPS Time: {{currentItem?.gps?.timestamp}}</div>
+          <el-button class="fullscreen-btn" type="primary" circle @click="toggleFullscreen">
+            <el-icon><FullScreen /></el-icon>
+          </el-button>
         </div>
 
         <div>
@@ -157,7 +160,7 @@ import { blobToDataURL } from "@/utils/dataUrlTools";
 import { usePhotoStore } from "@/stores/photo.ts"
 import { ElMessage } from "element-plus";
 import { getLabelList, type LabelInfo } from '@/api/label';
-import { Refresh, Camera, Upload, Picture, Delete, Back } from '@element-plus/icons-vue'
+import { Refresh, Camera, Upload, Picture, Delete, Back, FullScreen } from '@element-plus/icons-vue'
 
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
@@ -564,6 +567,18 @@ const handleLabelChange = async (label: LabelInfo, status: boolean) => {
     }
   }
 }
+
+function toggleFullscreen() {
+  const img = imgdrawer.value;
+  if (!img) return;
+
+  if (!document.fullscreenElement) {
+    img.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
 </script>
 
 <style scoped>
@@ -791,6 +806,25 @@ const handleLabelChange = async (label: LabelInfo, status: boolean) => {
 
 :deep(.el-progress__text) {
   color: #fff !important;
+}
+
+
+.time-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fullscreen-btn {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+}
+
+.fullscreen-btn:hover {
+  background: rgba(255,255,255,0.3);
 }
 
 </style>
