@@ -375,63 +375,168 @@ function handleError(error: any) {
     stack: error.stack
   });
 }
-
 function takePhoto() {
   if (drawer.value) {
     drawer.value = false
     currentCamera.value = null
     return
   }
+
   const videoDom = document.getElementById('video') as any
-  if (videoDom && videoDom.srcObject) {
-    // 获取视频流
-    const videoTrack = videoDom?.srcObject?.getVideoTracks()[0]
-    if (videoTrack) {
-      // @ts-ignore
-      let capture = new ImageCapture(videoTrack)
-      const id = uuidv4()
-      capture.takePhoto().then(async (blob: Blob) => {
+  if (!videoDom || !videoDom.srcObject) {
+    ElMessage.error('未找到视频流')
+    return
+  }
+
+  // 获取视频流
+  const videoTrack = videoDom?.srcObject?.getVideoTracks()[0]
+  if (!videoTrack) {
+    ElMessage.error('未找到视频轨道')
+    return
+  }
+
+  const id = uuidv4()
+
+  // 检查是否支持 ImageCapture
+  if ('ImageCapture' in window) {
+    console.log('使用 ImageCapture API 拍照')
+    // @ts-ignore
+    const imageCapture = new ImageCapture(videoTrack)
+
+    imageCapture.takePhoto()
+      .then(async (blob: Blob) => {
         const dataUrl = await blobToDataURL(blob)
-
-        // 图片二进制数据
-        const image = {
-          id,
-          dataUrl,
-          gps: {
-            accuracy: photoStore.gps.accuracy,
-            coords: {
-              latitude: photoStore.gps.coords.latitude,
-              longitude: photoStore.gps.coords.longitude,
-            },
-            timestamp: photoStore.gps.timestamp,
-          },
-          shotTime: Date.now(),
-          labels: [],
-        }
-
-        // 存储图片到数据库
-        imageStore.setItem(image.id.toString(), image).then(() => {
-          console.log('Image stored successfully');
-          ElMessage({
-            message: '照片已保存',
-            type: 'success',
-          })
-          images.value.push(image);
-          currentItem.value = image
-          drawer.value = true
-        }).catch((error:any) => {
-          ElMessage({
-            message:'保存照片失败:'+ error.message,
-            type: 'error',
-          })
-        });
+        savePhoto(id, dataUrl)
       })
-      .catch((error:any) => {
-        console.error("takePhoto() error: ", error);
-      });
+      .catch((error: any) => {
+        console.error("ImageCapture takePhoto 失败，降级使用 Canvas:", error)
+        // 降级使用 Canvas 方式
+        takePhotoWithCanvas()
+      })
+  } else {
+    console.log('浏览器不支持 ImageCapture，使用 Canvas 拍照')
+    takePhotoWithCanvas()
+  }
+
+  // Canvas 拍照方法
+  function takePhotoWithCanvas() {
+    try {
+      // 创建 canvas 元素
+      const canvas = document.createElement('canvas')
+      canvas.width = videoDom.videoWidth
+      canvas.height = videoDom.videoHeight
+
+      // 获取 canvas 上下文
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        throw new Error('无法获取 canvas 上下文')
+      }
+
+      // 在 canvas 上绘制当前视频帧
+      ctx.drawImage(videoDom, 0, 0, canvas.width, canvas.height)
+
+      // 生成图片数据（可以调整图片质量）
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+      savePhoto(id, dataUrl)
+    } catch (error) {
+      console.error("Canvas 拍照失败:", error)
+      ElMessage.error('拍照失败：' + error)
     }
   }
+
+  // 保存照片的公共方法
+  function savePhoto(id: string, dataUrl: string) {
+    const image = {
+      id,
+      dataUrl,
+      gps: {
+        accuracy: photoStore.gps.accuracy,
+        coords: {
+          latitude: photoStore.gps.coords.latitude,
+          longitude: photoStore.gps.coords.longitude,
+        },
+        timestamp: photoStore.gps.timestamp,
+      },
+      shotTime: Date.now(),
+      labels: [],
+    }
+
+    // 存储图片到数据库
+    imageStore.setItem(image.id.toString(), image)
+      .then(() => {
+        console.log('图片保存成功')
+        ElMessage({
+          message: '照片已保存',
+          type: 'success',
+        })
+        images.value.push(image)
+        currentItem.value = image
+        drawer.value = true
+      })
+      .catch((error: any) => {
+        ElMessage({
+          message: '保存照片失败:' + error.message,
+          type: 'error',
+        })
+      })
+  }
 }
+// function takePhoto() {
+//   if (drawer.value) {
+//     drawer.value = false
+//     currentCamera.value = null
+//     return
+//   }
+//   const videoDom = document.getElementById('video') as any
+//   if (videoDom && videoDom.srcObject) {
+//     // 获取视频流
+//     const videoTrack = videoDom?.srcObject?.getVideoTracks()[0]
+//     if (videoTrack) {
+//       // @ts-ignore
+//       let capture = new ImageCapture(videoTrack)
+//       const id = uuidv4()
+//       capture.takePhoto().then(async (blob: Blob) => {
+//         const dataUrl = await blobToDataURL(blob)
+
+//         // 图片二进制数据
+//         const image = {
+//           id,
+//           dataUrl,
+//           gps: {
+//             accuracy: photoStore.gps.accuracy,
+//             coords: {
+//               latitude: photoStore.gps.coords.latitude,
+//               longitude: photoStore.gps.coords.longitude,
+//             },
+//             timestamp: photoStore.gps.timestamp,
+//           },
+//           shotTime: Date.now(),
+//           labels: [],
+//         }
+
+//         // 存储图片到数据库
+//         imageStore.setItem(image.id.toString(), image).then(() => {
+//           console.log('Image stored successfully');
+//           ElMessage({
+//             message: '照片已保存',
+//             type: 'success',
+//           })
+//           images.value.push(image);
+//           currentItem.value = image
+//           drawer.value = true
+//         }).catch((error:any) => {
+//           ElMessage({
+//             message:'保存照片失败:'+ error.message,
+//             type: 'error',
+//           })
+//         });
+//       })
+//       .catch((error:any) => {
+//         console.error("takePhoto() error: ", error);
+//       });
+//     }
+//   }
+// }
 
 // 从缓存中删除
 function deleteItem() {
