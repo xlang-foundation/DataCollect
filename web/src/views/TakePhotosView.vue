@@ -57,7 +57,7 @@
         <div class="preview-action-buttons blur-panel">
           <el-popconfirm title="确认删除?" @confirm="deleteItem">
             <template #reference>
-              <el-button class="preview-btn" type="danger" round size="large">
+              <el-button class="preview-btn" type="danger" round size="small">
                 <el-icon><Delete /></el-icon>
                 删除
               </el-button>
@@ -68,7 +68,7 @@
             class="preview-btn"
             type="success"
             round
-            size="large"
+            size="small"
             @click="submitUpload"
             :loading="uploadStatus.isUploading"
           >
@@ -80,7 +80,7 @@
             class="preview-btn"
             type="info"
             round
-            size="large"
+            size="small"
             @click="drawer = false"
           >
             <el-icon><Back /></el-icon>
@@ -830,7 +830,6 @@ function toggleFullscreen() {
   justify-content: space-around;
   align-items: center;
   gap: 12px;
-  margin: 0 20px 20px;
   padding: 12px;
 }
 
