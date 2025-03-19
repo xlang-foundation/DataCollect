@@ -236,18 +236,28 @@ const cameraList: Ref<{
 }[]> = ref([])
 async function getDevices() {
   try {
+    console.log('开始获取摄像头设备...');
     // 检查mediaDevices API是否可用
     if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      console.log('mediaDevices API不可用:', {
+        mediaDevices: !!navigator.mediaDevices,
+        enumerateDevices: !!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)
+      });
       throw new Error('浏览器不支持mediaDevices API');
     }
 
+    console.log('请求摄像头权限...');
     // 先请求摄像头权限
     await navigator.mediaDevices.getUserMedia({ video: true });
+    console.log('摄像头权限获取成功');
 
     // 然后枚举设备
+    console.log('开始枚举设备...');
     const devices = await navigator.mediaDevices.enumerateDevices();
+    console.log('枚举到的所有设备:', devices);
     gotDevices(devices);
   } catch (error) {
+    console.error('获取摄像头失败:', error);
     handleError(error);
     ElMessage.error('获取摄像头失败，请确保已授予摄像头权限');
   }
@@ -303,22 +313,25 @@ function openPreview(image: ItemStruct) {
 }
 
 function gotDevices(deviceInfos:MediaDeviceInfo[]) {
+  console.log('开始处理设备列表...');
   // 从中找到后置摄像头放进cameraList中
   for (let i = 0; i !== deviceInfos.length; ++i) {
     const deviceInfo = deviceInfos[i];
-    if (deviceInfo.kind === 'videoinput' && deviceInfo.label.includes('back')) {
-      cameraList.value.push({
-        label: deviceInfo.label || `camera ${cameraList.value.length + 1}`,
-        value: deviceInfo.deviceId,
-        deviceInfo: deviceInfo
-      });
-    }
-  }
-  // 如果没有后置摄像头，就还是找到所有摄像头
-  if (currentCamera.value && currentCamera.value.length === 0) {
-    for (let i = 0; i !== deviceInfos.length; ++i) {
-      const deviceInfo = deviceInfos[i];
-      if (deviceInfo.kind === 'videoinput') {
+    console.log('检查设备:', {
+      kind: deviceInfo.kind,
+      label: deviceInfo.label,
+      deviceId: deviceInfo.deviceId
+    });
+
+    // 修改判断逻辑，适配iOS设备
+    if (deviceInfo.kind === 'videoinput') {
+      // 不再仅仅检查'back'关键字
+      const isBackCamera = deviceInfo.label.toLowerCase().includes('back') ||
+                         deviceInfo.label.toLowerCase().includes('后置') ||
+                         deviceInfo.label.toLowerCase().includes('rear');
+
+      if (isBackCamera) {
+        console.log('找到后置摄像头:', deviceInfo.label);
         cameraList.value.push({
           label: deviceInfo.label || `camera ${cameraList.value.length + 1}`,
           value: deviceInfo.deviceId,
@@ -327,13 +340,40 @@ function gotDevices(deviceInfos:MediaDeviceInfo[]) {
       }
     }
   }
-  console.log(cameraList.value);
+
+  // 如果没有找到后置摄像头，就添加所有视频输入设备
+  if (cameraList.value.length === 0) {
+    console.log('未找到后置摄像头，添加所有视频输入设备');
+    for (let i = 0; i !== deviceInfos.length; ++i) {
+      const deviceInfo = deviceInfos[i];
+      if (deviceInfo.kind === 'videoinput') {
+        console.log('添加视频输入设备:', deviceInfo.label);
+        cameraList.value.push({
+          label: deviceInfo.label || `camera ${cameraList.value.length + 1}`,
+          value: deviceInfo.deviceId,
+          deviceInfo: deviceInfo
+        });
+      }
+    }
+  }
+
+  console.log('最终的摄像头列表:', cameraList.value);
 
   // 默认选中第一个摄像头
-  currentCamera.value = cameraList.value[0];
+  if (cameraList.value.length > 0) {
+    currentCamera.value = cameraList.value[0];
+    console.log('已选择默认摄像头:', currentCamera.value);
+  } else {
+    console.log('警告: 未找到任何可用的摄像头设备');
+  }
 }
 function handleError(error: any) {
   console.log('navigator.MediaDevices.getUserMedia error: ', error.message, error.name);
+  console.error('摄像头错误详情:', {
+    message: error.message,
+    name: error.name,
+    stack: error.stack
+  });
 }
 
 function takePhoto() {
