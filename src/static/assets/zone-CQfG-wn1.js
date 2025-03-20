@@ -1,1 +1,0 @@
-import{r as t}from"./request-DdvWjchG.js";const r=()=>t({url:"/api/zone/list",method:"GET"}),d=e=>t({url:"/api/zone/add",method:"POST",data:{name:e}}),n=e=>t({url:"/api/zone/delete",method:"POST",data:{id:e}}),s=(e,a)=>t({url:"/api/zone/update",method:"POST",data:{id:e,name:a}});export{d as a,n as d,r as g,s as u};
