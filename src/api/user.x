@@ -1,4 +1,3 @@
-
 from xlang_sqlite import sqlite
 from xlang_yaml import yaml
 from '../utils' import simple_hash
@@ -384,7 +383,7 @@ def delete_label():
     %DELETE FROM labels WHERE id = ${label_id};
     
     popWritepad()
-    return [str({"success": True, "message": "Label deleted successfully"}, format=True), "text/json"]
+    return [str({"success": False, "message": "Label deleted successfully"}, format=True), "text/json"]
 
 
 # API: Update Label
@@ -591,4 +590,32 @@ def upload_file():
         "success": True,
         "message": "File uploaded successfully",
         "file_info": metadata
+    }, format=True), "text/json"]
+
+@srv.route("/api/error/report")
+def report_error():
+    body = req.body
+    jsonBody = yaml.loads(body)
+    
+    error_message = jsonBody["error"]
+    error_stack = jsonBody["stack"]
+    
+    # 生成时间戳作为文件名
+    timestamp = str(time.time()).replace(".", "")
+    error_path = "errors-${timestamp}.json"
+    
+    # 准备错误信息
+    error_info = {
+        "timestamp": timestamp,
+        "error": error_message,
+        "stack": error_stack
+    }
+    
+    # 写入错误信息到文件
+    error_content = str(error_info, format=True)
+    write_binary(error_path, error_content)
+    
+    return [str({
+        "success": True,
+        "message": "Error reported successfully"
     }, format=True), "text/json"]
