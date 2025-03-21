@@ -1,0 +1,1 @@
+import{T as t}from"./index-csrz31wk.js";const d=()=>t({url:"/api/label/list",method:"get"}),r=e=>t({url:"/api/label/add",method:"post",data:{label:e}}),s=e=>t({url:"/api/label/delete",method:"post",data:{id:e}}),o=(e,a)=>t({url:"/api/label/update",method:"post",data:{id:e,label:a}});export{r as a,s as d,d as g,o as u};
