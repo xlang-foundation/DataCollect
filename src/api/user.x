@@ -613,8 +613,9 @@ def report_error():
     
     # 写入错误信息到文件
     error_content = str(error_info, format=True)
-    write_binary(error_path, error_content)
-    
+    f = fs.File(error_path,"w")
+    f.write(error_content)
+    f.close()
     return [str({
         "success": True,
         "message": "Error reported successfully"
