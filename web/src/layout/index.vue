@@ -4,7 +4,7 @@
     <!-- 侧边栏 -->
     <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
       <div class="logo" :class="{ 'logo-collapse': isCollapse }">
-        {{ isCollapse ? '系统' : '数据采集系统' }}
+        {{ isCollapse ? t('menu.system') : t('menu.dataCollectSystem') }}
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -17,19 +17,19 @@
       >
         <el-menu-item index="/admin/user">
           <el-icon><User /></el-icon>
-          <template #title>用户管理</template>
+          <template #title>{{ t('menu.userManagement') }}</template>
         </el-menu-item>
         <el-menu-item index="/admin/zone">
           <el-icon><Location /></el-icon>
-          <template #title>区域管理</template>
+          <template #title>{{ t('menu.zoneManagement') }}</template>
         </el-menu-item>
         <el-menu-item index="/admin/label">
           <el-icon><Collection /></el-icon>
-          <template #title>标签管理</template>
+          <template #title>{{ t('menu.labelManagement') }}</template>
         </el-menu-item>
         <el-menu-item index="/admin/task">
           <el-icon><Share /></el-icon>
-          <template #title>分派任务</template>
+          <template #title>{{ t('menu.taskAssignment') }}</template>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -46,8 +46,12 @@
           </el-icon>
         </div>
         <div class="header-right">
-          <span class="welcome">欢迎，{{ displayName }}</span>
-          <el-button type="text" @click="handleLogout">退出登录</el-button>
+          <el-select v-model="currentLang" @change="handleLanguageChange">
+            <el-option label="中文" value="zh-CN" />
+            <el-option label="English" value="en-US" />
+          </el-select>
+          <span class="welcome">{{ t('common.welcome') }}，{{ displayName }}</span>
+          <el-button type="text" @click="handleLogout">{{ t('common.logout') }}</el-button>
         </div>
       </el-header>
 
@@ -64,9 +68,13 @@ import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { User, Location, Collection, Share, Expand, Fold } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
+import { useLanguageStore } from '@/stores/language'
 
 const router = useRouter()
 const route = useRoute()
+const { t, locale } = useI18n()
+const languageStore = useLanguageStore()
 
 // 控制侧边栏折叠状态
 const isCollapse = ref(window.innerWidth <= 768)
@@ -74,12 +82,26 @@ const isCollapse = ref(window.innerWidth <= 768)
 // 当前用户显示名称
 const displayName = ref(localStorage.getItem('display_name') || '')
 
+// 当前语言
+const currentLang = computed({
+  get: () => languageStore.currentLanguage,
+  set: (value) => languageStore.setLanguage(value)
+})
+
 // 当前激活的菜单项
 const activeMenu = computed(() => route.path)
 
 // 切换侧边栏
 const toggleSidebar = () => {
   isCollapse.value = !isCollapse.value
+}
+
+// 切换语言
+const handleLanguageChange = (lang: string) => {
+  // 更新 vue-i18n 的 locale
+  locale.value = lang
+  // 更新 store 中的语言设置
+  languageStore.setLanguage(lang)
 }
 
 // 监听窗口大小变化
@@ -92,9 +114,9 @@ window.addEventListener('resize', () => {
 // 退出登录
 const handleLogout = async () => {
   try {
-    await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    await ElMessageBox.confirm(t('common.confirmLogout'), t('common.tip'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'warning'
     })
 
