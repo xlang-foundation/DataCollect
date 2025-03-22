@@ -1,6 +1,12 @@
 <!-- src/views/admin/login/index.vue -->
 <template>
   <div class="login-container">
+    <div class="language-switch">
+      <el-select v-model="currentLanguage" @change="handleLanguageChange" size="small">
+        <el-option label="中文" value="zh-CN" />
+        <el-option label="English" value="en-US" />
+      </el-select>
+    </div>
     <el-card class="login-card">
       <template #header>
         <h2 class="login-title">{{ t('login.title') }}</h2>
@@ -55,9 +61,17 @@ import { User, Lock } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 import { login } from '@/api/user'
 import { useI18n } from 'vue-i18n'
+import { useLanguageStore } from '@/stores/language'
 
-const { t } = useI18n()
 const router = useRouter()
+const languageStore = useLanguageStore()
+const currentLanguage = ref(languageStore.currentLanguage)
+const { t, locale } = useI18n()
+const handleLanguageChange = (value: string) => {
+  languageStore.setLanguage(value)
+  locale.value = value
+}
+
 const loading = ref(false)
 const loginFormRef = ref<FormInstance>()
 
@@ -131,5 +145,16 @@ const handleLogin = async () => {
 
 .login-button {
   width: 100%;
+}
+
+.language-switch {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.language-switch .el-select {
+  width: 100px;
 }
 </style>
