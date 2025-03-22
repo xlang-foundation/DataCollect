@@ -8,7 +8,8 @@ export function reportError(error: string, stack: string) {
     method: 'post',
     data: {
       error,
-      stack
+      stack,
+      ua: window.navigator.userAgent
     }
   })
 }
