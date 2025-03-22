@@ -1,12 +1,12 @@
 import "normalize.css"
 import './assets/main.css'
 import 'element-plus/dist/index.css'
-
+import 'dayjs/locale/zh-cn'
+import 'dayjs/locale/en'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
-// @ts-ignore
-import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+
 import { createI18n } from 'vue-i18n'
 import App from './App.vue'
 import router from './router'
@@ -59,8 +59,7 @@ window.onerror = (message, source, lineno, colno, error) => {
 app.use(createPinia())
 app.use(router)
 // 使用 Element Plus 并设置中文
-app.use(ElementPlus, {
-  locale: zhCn
-})
+app.use(ElementPlus)
+
 app.use(i18n)
 app.mount('#app')
