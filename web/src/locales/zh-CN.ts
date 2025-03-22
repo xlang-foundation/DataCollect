@@ -38,7 +38,10 @@ export default {
     admin: '管理员',
     collector: '采集员',
     lastLoginTime: '最后登录时间',
-    userManagement: '用户管理'
+    userManagement: '用户管理',
+    logout: '退出登录',
+    lengthLimit3to20: '长度在 3 到 20 个字符',
+    lengthLimit6to20: '长度在 6 到 20 个字符',
   },
   zone: {
     zoneName: '区域名称',

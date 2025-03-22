@@ -51,7 +51,7 @@
             <el-option label="English" value="en-US" />
           </el-select>
           <span class="welcome">{{ t('common.welcome') }}，{{ displayName }}</span>
-          <el-button type="text" @click="handleLogout">{{ t('common.logout') }}</el-button>
+          <el-button type="primary" link @click="handleLogout">{{ t('common.logout') }}</el-button>
         </div>
       </el-header>
 
@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, getCurrentInstance } from 'vue'
+import { ref, computed, getCurrentInstance, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { User, Location, Collection, Share, Expand, Fold } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
@@ -113,6 +113,24 @@ const handleLanguageChange = (lang: string) => {
 window.addEventListener('resize', () => {
   if (window.innerWidth <= 768) {
     isCollapse.value = true
+  }
+})
+
+// 组件加载时自动检测浏览器语言并设置
+onMounted(() => {
+  // 如果本地存储中没有语言设置，才进行自动检测
+  if (!localStorage.getItem('language')) {
+    // 获取浏览器语言设置
+    const browserLang = navigator.language
+
+    // 判断是否包含中文
+    const lang = browserLang.toLowerCase().includes('zh') ? 'zh-CN' : 'en-US'
+
+    // 设置语言
+    locale.value = lang
+    languageStore.setLanguage(lang)
+    // 保存到本地存储
+    localStorage.setItem('language', lang)
   }
 })
 

@@ -44,12 +44,19 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled Promise Rejection:', event.reason)
   reportError('Unhandled Promise Rejection', event.reason?.stack || event.reason?.message || String(event.reason))
 })
-
 // 添加全局错误处理
 window.onerror = (message, source, lineno, colno, error) => {
-  console.error('Global Error:', error)
-  reportError(String(message), error?.stack || '')
-  return true
+  if (typeof message === 'string' && message.indexOf('ResizeObserver') !== -1) {
+    return true
+  }
+  // 如果是开发环境
+  if (import.meta.env.DEV) {
+    console.error('Global Error:', error)
+    return true
+  } else {
+    reportError(String(message), error?.stack || '')
+    return true
+  }
 }
 
 app.use(createPinia())
