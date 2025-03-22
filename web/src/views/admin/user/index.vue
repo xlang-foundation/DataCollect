@@ -2,20 +2,20 @@
 <template>
   <div class="user-container">
     <div class="header">
-      <h2>用户管理</h2>
-      <el-button type="primary" @click="handleAdd">添加用户</el-button>
+      <h2>{{ t('user.userManagement') }}</h2>
+      <el-button type="primary" @click="handleAdd">{{ t('user.addUser') }}</el-button>
     </div>
 
     <!-- 用户列表表格 -->
     <el-table :data="userList" border style="width: 100%" v-loading="loading">
-      <el-table-column prop="username" label="用户名" />
-      <el-table-column prop="display_name" label="显示名称" />
-      <el-table-column prop="last_login" label="最后登录时间">
+      <el-table-column prop="username" :label="t('user.username')" />
+      <el-table-column prop="display_name" :label="t('user.displayName')" />
+      <el-table-column prop="last_login" :label="t('user.lastLoginTime')">
         <template #default="{ row }">
           {{ formatDate(row.last_login) }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="150">
+      <el-table-column :label="t('common.operation')" width="150">
         <template #default="{ row }">
           <el-button
             type="danger"
@@ -23,7 +23,7 @@
             @click="handleDelete(row)"
             :disabled="row.username === currentUsername"
           >
-            删除
+            {{ t('common.delete') }}
           </el-button>
         </template>
       </el-table-column>
@@ -32,7 +32,7 @@
     <!-- 添加用户对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      title="添加用户"
+      :title="t('user.addUser')"
       width="500px"
       @close="resetForm"
     >
@@ -42,20 +42,20 @@
         :rules="rules"
         label-width="100px"
       >
-        <el-form-item label="用户名" prop="username">
+        <el-form-item :label="t('user.username')" prop="username">
           <el-input v-model="form.username" />
         </el-form-item>
-        <el-form-item label="显示名称" prop="display_name">
+        <el-form-item :label="t('user.displayName')" prop="display_name">
           <el-input v-model="form.display_name" />
         </el-form-item>
-        <el-form-item label="密码" prop="password">
+        <el-form-item :label="t('user.password')" prop="password">
           <el-input v-model="form.password" type="password" show-password />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitLoading">
-          确定
+          {{ t('common.confirm') }}
         </el-button>
       </template>
     </el-dialog>
@@ -68,7 +68,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { getUserList, register, deleteUser } from '@/api/user'
 import type { UserInfo } from '@/api/user'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const loading = ref(false)
 const submitLoading = ref(false)
 const dialogVisible = ref(false)
@@ -84,15 +86,15 @@ const form = ref({
 
 const rules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+    { required: true, message: t('validation.required'), trigger: 'blur' },
+    { min: 3, max: 20, message: t('user.lengthLimit3to20'), trigger: 'blur' }
   ],
   display_name: [
-    { required: true, message: '请输入显示名称', trigger: 'blur' }
+    { required: true, message: t('validation.required'), trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+    { required: true, message: t('validation.required'), trigger: 'blur' },
+    { min: 6, max: 20, message: t('user.lengthLimit6to20'), trigger: 'blur' }
   ]
 }
 
@@ -134,7 +136,7 @@ const handleSubmit = async () => {
         display_name: form.value.display_name,
         password: form.value.password
       })
-      ElMessage.success('添加用户成功')
+      ElMessage.success(t('user.addSuccess'))
       dialogVisible.value = false
       fetchUserList()
     } catch (error) {
@@ -149,17 +151,17 @@ const handleSubmit = async () => {
 const handleDelete = async (row: UserInfo) => {
   try {
     await ElMessageBox.confirm(
-      `确定要删除用户 "${row.display_name}" 吗？`,
-      '警告',
+      t('user.deleteUserConfirm', { name: row.display_name }),
+      t('common.warning'),
       {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
     )
 
     await deleteUser(row.username)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('common.deleteSuccess'))
     fetchUserList()
   } catch (error) {
     if (error !== 'cancel') {

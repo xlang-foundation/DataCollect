@@ -2,21 +2,21 @@
 <template>
   <div class="label-container">
     <div class="header">
-      <h2>标签管理</h2>
-      <el-button type="primary" @click="handleAdd">添加标签</el-button>
+      <h2>{{ t('label.labelManagement') }}</h2>
+      <el-button type="primary" @click="handleAdd">{{ t('label.addLabel') }}</el-button>
     </div>
 
     <!-- 标签列表 -->
     <el-table :data="labelList" border style="width: 100%" v-loading="loading">
       <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="label" label="标签名称" />
-      <el-table-column label="操作" width="200">
+      <el-table-column prop="label" :label="t('label.labelName')" />
+      <el-table-column :label="t('common.operation')" width="200">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="handleEdit(row)">
-            编辑
+            {{ t('common.edit') }}
           </el-button>
           <el-button type="danger" size="small" @click="handleDelete(row)">
-            删除
+            {{ t('common.delete') }}
           </el-button>
         </template>
       </el-table-column>
@@ -25,7 +25,7 @@
     <!-- 添加/编辑对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="isEdit ? '编辑标签' : '添加标签'"
+      :title="isEdit ? t('label.editLabel') : t('label.addLabel')"
       width="500px"
       @close="resetForm"
     >
@@ -35,14 +35,14 @@
         :rules="rules"
         label-width="100px"
       >
-        <el-form-item label="标签名称" prop="label">
+        <el-form-item :label="t('label.labelName')" prop="label">
           <el-input v-model="form.label" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitLoading">
-          确定
+          {{ t('common.confirm') }}
         </el-button>
       </template>
     </el-dialog>
@@ -55,7 +55,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { getLabelList, addLabel, updateLabel, deleteLabel } from '@/api/label'
 import type { LabelInfo } from '@/api/label'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const loading = ref(false)
 const submitLoading = ref(false)
 const dialogVisible = ref(false)
@@ -70,7 +72,7 @@ const form = ref({
 
 const rules = {
   label: [
-    { required: true, message: '请输入标签名称', trigger: 'blur' }
+    { required: true, message: t('validation.required'), trigger: 'blur' }
   ]
 }
 
@@ -112,15 +114,16 @@ const handleSubmit = async () => {
       submitLoading.value = true
       if (isEdit.value) {
         await updateLabel(form.value.id, form.value.label)
-        ElMessage.success('更新成功')
+        ElMessage.success(t('common.success'))
       } else {
         await addLabel(form.value.label)
-        ElMessage.success('添加成功')
+        ElMessage.success(t('common.success'))
       }
       dialogVisible.value = false
       fetchLabelList()
     } catch (error) {
       console.error('Operation failed:', error)
+      ElMessage.error(t('common.error'))
     } finally {
       submitLoading.value = false
     }
@@ -131,21 +134,22 @@ const handleSubmit = async () => {
 const handleDelete = async (row: LabelInfo) => {
   try {
     await ElMessageBox.confirm(
-      `确定要删除标签 "${row.label}" 吗？`,
-      '警告',
+      t('label.deleteConfirm'),
+      t('common.tip'),
       {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
     )
 
     await deleteLabel(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('common.success'))
     fetchLabelList()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('Failed to delete label:', error)
+      ElMessage.error(t('common.error'))
     }
   }
 }

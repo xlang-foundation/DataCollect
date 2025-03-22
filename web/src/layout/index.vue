@@ -3,7 +3,7 @@
   <el-container class="layout-container">
     <!-- 侧边栏 -->
     <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
-      <div class="logo" :class="{ 'logo-collapse': isCollapse }">
+      <div class="logo" :class="{ 'logo-collapse': isCollapse, 'logo-en': currentLang === 'en-US' }">
         {{ isCollapse ? t('menu.system') : t('menu.dataCollectSystem') }}
       </div>
       <el-menu
@@ -64,17 +64,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, getCurrentInstance } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { User, Location, Collection, Share, Expand, Fold } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { useLanguageStore } from '@/stores/language'
+// @ts-ignore
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+// @ts-ignore
+import enUs from 'element-plus/dist/locale/en.mjs'
 
 const router = useRouter()
 const route = useRoute()
 const { t, locale } = useI18n()
 const languageStore = useLanguageStore()
+const { proxy: app } = getCurrentInstance()!
 
 // 控制侧边栏折叠状态
 const isCollapse = ref(window.innerWidth <= 768)
@@ -147,7 +152,9 @@ const handleLogout = async () => {
 
 .logo {
   height: 60px;
-  line-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-size: 18px;
   font-weight: bold;
@@ -155,11 +162,20 @@ const handleLogout = async () => {
   background-color: #2b2f3a;
   transition: all 0.3s;
   overflow: hidden;
-  white-space: nowrap;
+  padding: 0 10px;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.logo-en {
+  font-size: 16px;
 }
 
 .logo-collapse {
   font-size: 14px;
+  white-space: nowrap;
+  padding: 0;
 }
 
 .menu {

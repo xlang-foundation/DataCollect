@@ -5,6 +5,8 @@ import 'element-plus/dist/index.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
+// @ts-ignore
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import { createI18n } from 'vue-i18n'
 import App from './App.vue'
 import router from './router'
@@ -14,11 +16,14 @@ import { reportError } from '@/api/errorUpload'
 import zhCN from './locales/zh-CN'
 import enUS from './locales/en-US'
 
+// 设置默认语言为中文
+localStorage.setItem('language', 'zh-CN')
+
 // 创建i18n实例
 const i18n = createI18n({
   legacy: false, // 使用组合式API
-  locale: localStorage.getItem('language') || navigator.language, // 从localStorage获取语言设置，如果没有则使用浏览器默认语言
-  fallbackLocale: 'en-US', // 默认语言
+  locale: 'zh-CN', // 强制设置为中文
+  fallbackLocale: 'zh-CN', // 默认语言也设置为中文
   messages: {
     'zh-CN': zhCN,
     'en-US': enUS
@@ -49,6 +54,9 @@ window.onerror = (message, source, lineno, colno, error) => {
 
 app.use(createPinia())
 app.use(router)
-app.use(ElementPlus)
+// 使用 Element Plus 并设置中文
+app.use(ElementPlus, {
+  locale: zhCn
+})
 app.use(i18n)
 app.mount('#app')

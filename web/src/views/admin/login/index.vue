@@ -3,7 +3,7 @@
   <div class="login-container">
     <el-card class="login-card">
       <template #header>
-        <h2 class="login-title">系统登录</h2>
+        <h2 class="login-title">{{ t('login.title') }}</h2>
       </template>
 
       <el-form
@@ -17,7 +17,7 @@
         <el-form-item prop="username">
           <el-input
             v-model="loginForm.username"
-            placeholder="用户名"
+            :placeholder="t('login.username')"
             :prefix-icon="User"
           />
         </el-form-item>
@@ -26,7 +26,7 @@
           <el-input
             v-model="loginForm.password"
             type="password"
-            placeholder="密码"
+            :placeholder="t('login.password')"
             :prefix-icon="Lock"
             show-password
           />
@@ -39,7 +39,7 @@
             class="login-button"
             @click="handleLogin"
           >
-            登录
+            {{ t('login.loginButton') }}
           </el-button>
         </el-form-item>
       </el-form>
@@ -54,7 +54,9 @@ import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 import { login } from '@/api/user'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const router = useRouter()
 const loading = ref(false)
 const loginFormRef = ref<FormInstance>()
@@ -66,12 +68,12 @@ const loginForm = reactive({
 
 const loginRules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度应在 3 到 20 个字符之间', trigger: 'blur' }
+    { required: true, message: t('validation.required'), trigger: 'blur' },
+    { min: 3, max: 20, message: t('validation.tooShort'), trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度应在 6 到 20 个字符之间', trigger: 'blur' }
+    { required: true, message: t('validation.required'), trigger: 'blur' },
+    { min: 6, max: 20, message: t('validation.tooShort'), trigger: 'blur' }
   ]
 }
 
@@ -92,11 +94,12 @@ const handleLogin = async () => {
       localStorage.setItem('username', res.username)
       localStorage.setItem('display_name', res.display_name)
 
-      ElMessage.success('登录成功')
+      ElMessage.success(t('login.loginSuccess'))
       // 登录成功后跳转到管理页面
       router.push('/admin')
     } catch (error) {
       console.error('Login failed:', error)
+      ElMessage.error(t('login.loginFailed'))
     } finally {
       loading.value = false
     }

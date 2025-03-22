@@ -2,30 +2,30 @@
 <template>
   <div class="task-container">
     <div class="header">
-      <h2>分派任务</h2>
+      <h2>{{ t('task.taskAssignment') }}</h2>
     </div>
 
     <el-form :model="form" label-width="120px" class="task-form">
-      <el-form-item label="服务器地址">
+      <el-form-item :label="t('task.serverUrl')">
         <el-input
           v-model="form.serverUrl"
-          placeholder="请输入服务器地址"
+          :placeholder="t('task.enterServerUrl')"
           @change="handleServerUrlChange"
         />
       </el-form-item>
 
-      <el-form-item label="任务说明">
+      <el-form-item :label="t('task.description')">
         <el-input
           v-model="form.description"
           type="textarea"
           :rows="3"
-          placeholder="请输入任务说明"
+          :placeholder="t('task.enterDescription')"
           @change="handleDescriptionChange"
         />
       </el-form-item>
 
-      <el-form-item label="选择区域">
-        <el-select v-model="form.zoneId" placeholder="请选择区域">
+      <el-form-item :label="t('task.selectZone')">
+        <el-select v-model="form.zoneId" :placeholder="t('task.pleaseSelectZone')">
           <el-option
             v-for="zone in zoneList"
             :key="zone.id"
@@ -35,26 +35,26 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="拍摄者姓名">
+      <el-form-item :label="t('task.photographerName')">
         <el-input
           v-model="form.photographerName"
-          placeholder="请输入拍摄者姓名"
+          :placeholder="t('task.enterPhotographerName')"
         />
       </el-form-item>
 
       <el-form-item>
         <el-button type="primary" @click="generateLink" :disabled="!form.zoneId">
-          生成链接
+          {{ t('task.generateLink') }}
         </el-button>
       </el-form-item>
 
       <template v-if="generatedLink">
-        <el-form-item label="任务链接">
+        <el-form-item :label="t('task.taskLink')">
           <div class="link-section">
             <div class="link-row">
               <el-input v-model="generatedLink" readonly>
                 <template #append>
-                  <el-button @click="copyLink">复制链接</el-button>
+                  <el-button @click="copyLink">{{ t('task.copyLink') }}</el-button>
                 </template>
               </el-input>
             </div>
@@ -70,7 +70,7 @@
           </div>
         </el-form-item>
 
-        <el-form-item label="完整任务信息">
+        <el-form-item :label="t('task.fullTaskInfo')">
           <div class="task-info">
             <el-input
               v-model="fullTaskInfo"
@@ -79,7 +79,7 @@
               readonly
             >
               <template #append>
-                <el-button @click="copyFullInfo">复制全部</el-button>
+                <el-button @click="copyFullInfo">{{ t('task.copyAll') }}</el-button>
               </template>
             </el-input>
           </div>
@@ -96,14 +96,16 @@ import { getZoneList } from '@/api/zone'
 import { signName } from '@/api/user'
 import type { ZoneInfo } from '@/api/zone'
 import QRCodeVue3 from 'qrcode.vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const zoneList = ref<ZoneInfo[]>([])
 const generatedLink = ref('')
 
 // 表单数据
 const form = ref({
   serverUrl: localStorage.getItem('taskServerUrl') || window.location.origin,
-  description: localStorage.getItem('taskDescription') || '请点击链接完成拍照和标记',
+  description: localStorage.getItem('taskDescription') || t('task.defaultDescription'),
   zoneId: '',
   photographerName: ''
 })
@@ -111,7 +113,7 @@ const form = ref({
 // 完整任务信息
 const fullTaskInfo = computed(() => {
   if (!generatedLink.value) return ''
-  return `${form.value.description}\n\n任务链接：${generatedLink.value}`
+  return `${form.value.description}\n\n${t('task.taskLink')}：${generatedLink.value}`
 })
 
 // 获取区域列表
@@ -121,6 +123,7 @@ const fetchZoneList = async () => {
     zoneList.value = data
   } catch (error) {
     console.error('Failed to fetch zones:', error)
+    ElMessage.error(t('common.error'))
   }
 }
 
@@ -137,17 +140,16 @@ const handleDescriptionChange = () => {
 // 生成链接
 const generateLink = async () => {
   try {
-    const baseUrl = form.value.serverUrl.replace(/\/$/, '') // 移除末尾的斜杠
+    const baseUrl = form.value.serverUrl.replace(/\/$/, '')
     const params = new URLSearchParams()
 
     if (form.value.photographerName) {
-      // 获取名称token
       const data = await signName(form.value.photographerName)
 
       if (data.success) {
         params.append('name_token', data.token)
       } else {
-        ElMessage.error('获取名称签名失败')
+        ElMessage.error(t('task.nameSignError'))
         return
       }
     }
@@ -156,7 +158,7 @@ const generateLink = async () => {
     generatedLink.value = `${baseUrl}/zone/${form.value.zoneId}${queryString ? '?' + queryString : ''}`
   } catch (error) {
     console.error('Failed to generate link:', error)
-    ElMessage.error('生成链接失败')
+    ElMessage.error(t('task.generateLinkError'))
   }
 }
 
@@ -164,9 +166,9 @@ const generateLink = async () => {
 const copyLink = async () => {
   try {
     await navigator.clipboard.writeText(generatedLink.value)
-    ElMessage.success('链接已复制到剪贴板')
+    ElMessage.success(t('task.linkCopied'))
   } catch (err) {
-    ElMessage.error('复制失败')
+    ElMessage.error(t('task.copyError'))
   }
 }
 
@@ -174,9 +176,9 @@ const copyLink = async () => {
 const copyFullInfo = async () => {
   try {
     await navigator.clipboard.writeText(fullTaskInfo.value)
-    ElMessage.success('完整任务信息已复制到剪贴板')
+    ElMessage.success(t('task.fullInfoCopied'))
   } catch (err) {
-    ElMessage.error('复制失败')
+    ElMessage.error(t('task.copyError'))
   }
 }
 
