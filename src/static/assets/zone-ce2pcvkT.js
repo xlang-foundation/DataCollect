@@ -1,1 +1,0 @@
-import{T as t}from"./index-csrz31wk.js";const d=()=>t({url:"/api/zone/list",method:"GET"}),n=e=>t({url:"/api/zone/add",method:"POST",data:{name:e}}),r=e=>t({url:"/api/zone/delete",method:"POST",data:{id:e}}),s=(e,a)=>t({url:"/api/zone/update",method:"POST",data:{id:e,name:a}});export{n as a,r as d,d as g,s as u};
