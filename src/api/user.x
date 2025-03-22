@@ -4,6 +4,7 @@ from '../utils' import simple_hash
 from '../utils' import auth
 from '../utils' import fs as utilsfs
 from xlang_os import fs
+from xlang_os import utils
 import time
 
 def write_binary(path,data):
@@ -546,12 +547,8 @@ def upload_file():
     # 更新labels为已验证的标签列表
     labels = valid_labels
     
-    # 创建存储目录
-    # timestamp = int(time.time())
     timestamp= str(time.time()).replace(".", "")
-    storage_dir = "storage/files/${timestamp}"
 
-    
     # 保存文件
     original_filename = file_item["filename"]
     file_extension = original_filename.split(".")
@@ -560,8 +557,8 @@ def upload_file():
         file_extension = ""
     else:
         file_extension = "." + file_extension[len(file_extension)-1]
-
-    file_path = "${timestamp}${file_extension}"
+    id = utils.generate_uid()
+    file_path = "../storage/${id}${file_extension}"
     binary = file_item["content"]
     write_binary(file_path,binary)
 
@@ -570,18 +567,18 @@ def upload_file():
     
     # 准备元信息
     metadata = {
+        "id": id,
         "original_filename": original_filename,
         "timestamp": timestamp,
         "labels": labels,  # 初始为空数组，可以后续添加标签
         "zone_id": zone_id,
         "zone_name": zone_name,
-        "name_token": name_token,
         "uploader_name": uploader_name[0],
         "file_path": file_path
     }
     
     # 创建并写入元信息JSON文件
-    json_path = "${timestamp}.json"
+    json_path = "../storage/${id}.json"
     json_content = str(metadata, format=True)
     write_binary(json_path, json_content)
     
@@ -594,21 +591,23 @@ def upload_file():
 
 @srv.route("/api/error/report")
 def report_error():
+    id = utils.generate_uid()
     body = req.body
     jsonBody = yaml.loads(body)
     
     error_message = jsonBody["error"]
     error_stack = jsonBody["stack"]
+    ua = jsonBody["ua"]
     
-    # 生成时间戳作为文件名
     timestamp = str(time.time()).replace(".", "")
-    error_path = "errors-${timestamp}.json"
+    error_path = "../error/${id}.json"
     
     # 准备错误信息
     error_info = {
         "timestamp": timestamp,
         "error": error_message,
         "stack": error_stack
+        "ua":ua
     }
     
     # 写入错误信息到文件

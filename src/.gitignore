@@ -1,12 +1,13 @@
 database.db
 
-/api/*.jpg
-/api/*.png
-/api/*.bmp
-/api/*.gif
-/api/*.tiff
-/api/*.webp
+/storage/*.jpg
+/storage/*.png
+/storage/*.bmp
+/storage/*.gif
+/storage/*.tiff
+/storage/*.webp
 
 
-/api/*.json
-/storage
+/error/*.json
+/storage/*.json
+/storage/*.jpg
