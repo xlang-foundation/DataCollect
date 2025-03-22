@@ -15,7 +15,9 @@ export default {
     operation: '操作',
     back: '返回',
     success: '操作成功',
-    error: '操作失败'
+    error: '操作失败',
+    warning: '警告',
+    deleteSuccess: '删除成功'
   },
   menu: {
     system: '系统',

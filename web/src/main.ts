@@ -16,13 +16,10 @@ import { reportError } from '@/api/errorUpload'
 import zhCN from './locales/zh-CN'
 import enUS from './locales/en-US'
 
-// 设置默认语言为中文
-localStorage.setItem('language', 'zh-CN')
-
 // 创建i18n实例
 const i18n = createI18n({
   legacy: false, // 使用组合式API
-  locale: 'zh-CN', // 强制设置为中文
+  locale: "zh-CN",
   fallbackLocale: 'zh-CN', // 默认语言也设置为中文
   messages: {
     'zh-CN': zhCN,
