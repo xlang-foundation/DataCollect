@@ -14,10 +14,10 @@
         <!-- GPS信息 -->
         <div class="info-section">
           <div class="location-info blur-panel">
-            <div class="info-row">纬度: {{currentItem?.gps?.coords?.latitude}}</div>
-            <div class="info-row">经度: {{currentItem?.gps?.coords?.longitude}}</div>
+            <div class="info-row">{{ $t('photo.latitude') }}: {{currentItem?.gps?.coords?.latitude}}</div>
+            <div class="info-row">{{ $t('photo.longitude') }}: {{currentItem?.gps?.coords?.longitude}}</div>
           </div>
-          <div class="time-info blur-panel">GPS Time: {{currentItem?.gps?.timestamp}}</div>
+          <div class="time-info blur-panel">{{ $t('photo.gpsTime') }}: {{currentItem?.gps?.timestamp}}</div>
           <el-button class="fullscreen-btn" type="primary" circle @click="toggleFullscreen">
             <el-icon><FullScreen /></el-icon>
           </el-button>
@@ -27,7 +27,7 @@
 
         <!-- 缩略图预览 -->
         <div class="thumbnail-section blur-panel">
-          <div class="thumbnail-header">待上传列表 ({{images.length}})</div>
+          <div class="thumbnail-header">{{ $t('photo.uploadList') }} ({{images.length}})</div>
           <div class="thumbnail-list">
             <div
               v-for="(image, index) in images"
@@ -55,11 +55,11 @@
 
         <!-- 预览操作按钮组 -->
         <div class="preview-action-buttons blur-panel">
-          <el-popconfirm title="确认删除?" @confirm="deleteItem">
+          <el-popconfirm :title="$t('common.deleteConfirm')" @confirm="deleteItem">
             <template #reference>
               <el-button class="preview-btn" type="danger" round size="small">
                 <el-icon><Delete /></el-icon>
-                删除
+                {{ $t('common.delete') }}
               </el-button>
             </template>
           </el-popconfirm>
@@ -73,7 +73,7 @@
             :loading="uploadStatus.isUploading"
           >
             <el-icon><Upload /></el-icon>
-            {{ uploadStatus.isUploading ? '上传中...' : '上传' }}
+            {{ uploadStatus.isUploading ? $t('photo.uploading') : $t('photo.upload') }}
           </el-button>
 
           <el-button
@@ -84,7 +84,7 @@
             @click="drawer = false"
           >
             <el-icon><Back /></el-icon>
-            返回
+            {{ $t('common.back') }}
           </el-button>
         </div>
       </div>
@@ -95,7 +95,7 @@
     <div class="bottom-controls">
       <!-- 缩略图预览 -->
       <div class="thumbnail-section">
-        <div class="thumbnail-header">待上传列表 ({{images.length}})</div>
+        <div class="thumbnail-header">{{ $t('photo.uploadList') }} ({{images.length}})</div>
         <div class="thumbnail-list">
           <div
             v-for="(image, index) in images"
@@ -118,7 +118,7 @@
           @click="takePhoto"
         >
           <el-icon><Camera /></el-icon>
-          拍照
+          {{ $t('photo.takePhoto') }}
         </el-button>
 
         <el-upload
@@ -134,7 +134,7 @@
           <template #trigger>
             <el-button type="primary" round size="large">
               <el-icon><Picture /></el-icon>
-              选择照片
+              {{ $t('photo.selectPhoto') }}
             </el-button>
           </template>
         </el-upload>
@@ -161,11 +161,14 @@ import { usePhotoStore } from "@/stores/photo.ts"
 import { ElMessage } from "element-plus";
 import { getLabelList, type LabelInfo } from '@/api/label';
 import { Refresh, Camera, Upload, Picture, Delete, Back, FullScreen } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 
 import { genFileId } from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
 import { uploadFile } from "@/api/uploadFile";
 import { useRouter } from "vue-router";
+
+const { t } = useI18n()
 
 // 格式化进度显示
 const format = (percentage: number) => {
@@ -216,7 +219,6 @@ type ItemStruct = {
 const images = ref<ItemStruct[]>([]);
 // 获取数据库数据
 imageStore.iterate((value, key, iterationNumber) => {
-  console.log(value, key, iterationNumber);
   if (value) {
     images.value.push(value as ItemStruct);
   }
@@ -236,33 +238,26 @@ const cameraList: Ref<{
 }[]> = ref([])
 async function getDevices() {
   try {
-    console.log('开始获取摄像头设备...');
     // 检查mediaDevices API是否可用
     if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-      console.log('mediaDevices API不可用:', {
+      console.error('mediaDevices API不可用:', {
         mediaDevices: !!navigator.mediaDevices,
         enumerateDevices: !!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)
       });
-      throw new Error('浏览器不支持mediaDevices API');
+      throw new Error(t('error.browserNotSupported'));
     }
 
-    console.log('请求摄像头权限...');
     // 先请求摄像头权限
     await navigator.mediaDevices.getUserMedia({ video: true });
-    console.log('摄像头权限获取成功');
 
     // 然后枚举设备
-    console.log('开始枚举设备...');
     const devices = await navigator.mediaDevices.enumerateDevices();
-    console.log('枚举到的所有设备:', devices);
     gotDevices(devices);
   } catch (error) {
-    console.error('获取摄像头失败:', error);
     handleError(error);
-    ElMessage.error('获取摄像头失败，请确保已授予摄像头权限');
+    ElMessage.error(t('error.cameraPermissionDenied'));
   }
 }
-getDevices()
 
 // 在mounted时调用
 onMounted(() => {
@@ -313,15 +308,9 @@ function openPreview(image: ItemStruct) {
 }
 
 function gotDevices(deviceInfos:MediaDeviceInfo[]) {
-  console.log('开始处理设备列表...');
   // 从中找到后置摄像头放进cameraList中
   for (let i = 0; i !== deviceInfos.length; ++i) {
     const deviceInfo = deviceInfos[i];
-    console.log('检查设备:', {
-      kind: deviceInfo.kind,
-      label: deviceInfo.label,
-      deviceId: deviceInfo.deviceId
-    });
 
     // 修改判断逻辑，适配iOS设备
     if (deviceInfo.kind === 'videoinput') {
@@ -331,7 +320,6 @@ function gotDevices(deviceInfos:MediaDeviceInfo[]) {
                          deviceInfo.label.toLowerCase().includes('rear');
 
       if (isBackCamera) {
-        console.log('找到后置摄像头:', deviceInfo.label);
         cameraList.value.push({
           label: deviceInfo.label || `camera ${cameraList.value.length + 1}`,
           value: deviceInfo.deviceId,
@@ -343,11 +331,9 @@ function gotDevices(deviceInfos:MediaDeviceInfo[]) {
 
   // 如果没有找到后置摄像头，就添加所有视频输入设备
   if (cameraList.value.length === 0) {
-    console.log('未找到后置摄像头，添加所有视频输入设备');
     for (let i = 0; i !== deviceInfos.length; ++i) {
       const deviceInfo = deviceInfos[i];
       if (deviceInfo.kind === 'videoinput') {
-        console.log('添加视频输入设备:', deviceInfo.label);
         cameraList.value.push({
           label: deviceInfo.label || `camera ${cameraList.value.length + 1}`,
           value: deviceInfo.deviceId,
@@ -357,19 +343,15 @@ function gotDevices(deviceInfos:MediaDeviceInfo[]) {
     }
   }
 
-  console.log('最终的摄像头列表:', cameraList.value);
-
   // 默认选中第一个摄像头
   if (cameraList.value.length > 0) {
     currentCamera.value = cameraList.value[0];
-    console.log('已选择默认摄像头:', currentCamera.value);
   } else {
-    console.log('警告: 未找到任何可用的摄像头设备');
+    console.warn(t('error.noCameraFound'));
   }
 }
 function handleError(error: any) {
-  console.log('navigator.MediaDevices.getUserMedia error: ', error.message, error.name);
-  console.error('摄像头错误详情:', {
+  console.error('error:', {
     message: error.message,
     name: error.name,
     stack: error.stack
@@ -384,14 +366,14 @@ function takePhoto() {
 
   const videoDom = document.getElementById('video') as any
   if (!videoDom || !videoDom.srcObject) {
-    ElMessage.error('未找到视频流')
+    ElMessage.error(t('error.noVideoStream'))
     return
   }
 
   // 获取视频流
   const videoTrack = videoDom?.srcObject?.getVideoTracks()[0]
   if (!videoTrack) {
-    ElMessage.error('未找到视频轨道')
+    ElMessage.error(t('error.noVideoTrack'))
     return
   }
 
@@ -399,7 +381,6 @@ function takePhoto() {
 
   // 检查是否支持 ImageCapture
   if ('ImageCapture' in window) {
-    console.log('使用 ImageCapture API 拍照')
     // @ts-ignore
     const imageCapture = new ImageCapture(videoTrack)
 
@@ -414,7 +395,6 @@ function takePhoto() {
         takePhotoWithCanvas()
       })
   } else {
-    console.log('浏览器不支持 ImageCapture，使用 Canvas 拍照')
     takePhotoWithCanvas()
   }
 
@@ -429,7 +409,7 @@ function takePhoto() {
       // 获取 canvas 上下文
       const ctx = canvas.getContext('2d')
       if (!ctx) {
-        throw new Error('无法获取 canvas 上下文')
+        throw new Error(t('error.canvasContextError'))
       }
 
       // 在 canvas 上绘制当前视频帧
@@ -440,7 +420,7 @@ function takePhoto() {
       savePhoto(id, dataUrl)
     } catch (error) {
       console.error("Canvas 拍照失败:", error)
-      ElMessage.error('拍照失败：' + error)
+      ElMessage.error(t('error.takePhotoFailed', { error }))
     }
   }
 
@@ -464,9 +444,8 @@ function takePhoto() {
     // 存储图片到数据库
     imageStore.setItem(image.id.toString(), image)
       .then(() => {
-        console.log('图片保存成功')
         ElMessage({
-          message: '照片已保存',
+          message: t('photo.photoSaved'),
           type: 'success',
         })
         images.value.push(image)
@@ -475,87 +454,29 @@ function takePhoto() {
       })
       .catch((error: any) => {
         ElMessage({
-          message: '保存照片失败:' + error.message,
+          message: t('photo.savePhotoFailed') + ': ' + error.message,
           type: 'error',
         })
       })
   }
 }
-// function takePhoto() {
-//   if (drawer.value) {
-//     drawer.value = false
-//     currentCamera.value = null
-//     return
-//   }
-//   const videoDom = document.getElementById('video') as any
-//   if (videoDom && videoDom.srcObject) {
-//     // 获取视频流
-//     const videoTrack = videoDom?.srcObject?.getVideoTracks()[0]
-//     if (videoTrack) {
-//       // @ts-ignore
-//       let capture = new ImageCapture(videoTrack)
-//       const id = uuidv4()
-//       capture.takePhoto().then(async (blob: Blob) => {
-//         const dataUrl = await blobToDataURL(blob)
-
-//         // 图片二进制数据
-//         const image = {
-//           id,
-//           dataUrl,
-//           gps: {
-//             accuracy: photoStore.gps.accuracy,
-//             coords: {
-//               latitude: photoStore.gps.coords.latitude,
-//               longitude: photoStore.gps.coords.longitude,
-//             },
-//             timestamp: photoStore.gps.timestamp,
-//           },
-//           shotTime: Date.now(),
-//           labels: [],
-//         }
-
-//         // 存储图片到数据库
-//         imageStore.setItem(image.id.toString(), image).then(() => {
-//           console.log('Image stored successfully');
-//           ElMessage({
-//             message: '照片已保存',
-//             type: 'success',
-//           })
-//           images.value.push(image);
-//           currentItem.value = image
-//           drawer.value = true
-//         }).catch((error:any) => {
-//           ElMessage({
-//             message:'保存照片失败:'+ error.message,
-//             type: 'error',
-//           })
-//         });
-//       })
-//       .catch((error:any) => {
-//         console.error("takePhoto() error: ", error);
-//       });
-//     }
-//   }
-// }
 
 // 从缓存中删除
 function deleteItem() {
-  console.log(currentItem.value);
   if (currentItem.value) {
     imageStore.removeItem(currentItem.value.id.toString()).then(() => {
-      console.log('Image removed successfully');
       // 从images 中删除
       const index = images.value.findIndex(item => item.id === currentItem.value?.id);
       if (index !== -1) {
         images.value.splice(index, 1);
       }
       ElMessage({
-        message: '照片已删除',
+        message: t('photo.photoDeleted'),
         type: 'success',
       })
       drawer.value = false
    }).catch((error) => {
-     ElMessage.error('删除照片失败:', error)
+     ElMessage.error(t('photo.deletePhotoFailed') + ': ' + error)
    }).finally(()=>{
     drawer.value = false
    })
@@ -607,7 +528,7 @@ const uploadStatus = ref({
 
 const submitUpload = async () => {
   if (images.value.length === 0) {
-    ElMessage.warning('没有待上传的图片')
+    ElMessage.warning(t('photo.noPhotos'))
     return
   }
 
@@ -623,7 +544,7 @@ const submitUpload = async () => {
   // 从store中获取name_token和zone_id
   const name_token = localStorage.getItem('name_token') || '';
   if (name_token === '') {
-    ElMessage.warning('获取name_token失败，请从邀请链接访问。');
+    ElMessage.warning(t('photo.nameTokenError'));
     return
   }
   const zoneId = router.currentRoute.value.params.zoneId as string;
@@ -662,7 +583,11 @@ const submitUpload = async () => {
 
     } catch (error: any) {
       uploadStatus.value.failed++;
-      ElMessage.error(`图片 ${uploadStatus.value.current}/${uploadStatus.value.total} 上传失败: ${error.message}`);
+      ElMessage.error(t('photo.uploadFailed', {
+        current: uploadStatus.value.current,
+        total: uploadStatus.value.total,
+        error: error.message
+      }));
       // 将失败的图片放回队列末尾，最多重试3次
       if (!image.retryCount || image.retryCount < 3) {
         image.retryCount = (image.retryCount || 0) + 1;
@@ -675,7 +600,10 @@ const submitUpload = async () => {
   uploadStatus.value.isUploading = false;
 
   if (uploadStatus.value.success > 0) {
-    ElMessage.success(`上传完成！成功：${uploadStatus.value.success}，失败：${uploadStatus.value.failed}`);
+    ElMessage.success(t('photo.uploadComplete', {
+      success: uploadStatus.value.success,
+      failed: uploadStatus.value.failed
+    }));
   }
 
   // 关闭预览窗口
@@ -707,8 +635,8 @@ const handleLabelChange = async (label: LabelInfo, status: boolean) => {
         images.value[index] = currentItem.value!;
       }
     } catch (error) {
-      console.log(error);
-      ElMessage.error('标签更新失败: ' + error);
+      console.error(error);
+      ElMessage.error(t('error.labelUpdateFailed') + ': ' + error);
     }
   }
 }

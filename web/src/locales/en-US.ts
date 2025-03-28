@@ -1,3 +1,4 @@
+
 export default {
   common: {
     welcome: 'Welcome',
@@ -18,6 +19,7 @@ export default {
     error: 'Operation failed',
     warning: 'Warning',
     deleteSuccess: 'Successfully deleted',
+    deleteConfirm: 'Are you sure to delete?',
   },
   menu: {
     system: 'System',
@@ -101,6 +103,34 @@ export default {
     linkCopied: 'Link copied to clipboard',
     fullInfoCopied: 'Full task info copied to clipboard',
     copyError: 'Copy failed'
+  },
+  photo: {
+    takePhoto: 'Take Photo',
+    selectPhoto: 'Select Photo',
+    photoSaved: 'Photo saved',
+    savePhotoFailed: 'Failed to save photo',
+    photoDeleted: 'Photo deleted',
+    deletePhotoFailed: 'Failed to delete photo',
+    uploadList: 'Upload List',
+    latitude: 'Latitude',
+    longitude: 'Longitude',
+    gpsTime: 'GPS Time',
+    noPhotos: 'No photos to upload',
+    uploadComplete: 'Upload complete! Success: {success}, Failed: {failed}',
+    uploadFailed: 'Photo {current}/{total} upload failed: {error}',
+    nameTokenError: 'Failed to get name token, please access via invitation link.',
+    uploading: 'Uploading...',
+    upload: 'Upload'
+  },
+  error: {
+    browserNotSupported: 'Browser does not support mediaDevices API',
+    cameraPermissionDenied: 'Failed to get camera, please ensure camera permission is granted',
+    noVideoStream: 'No video stream found',
+    noVideoTrack: 'No video track found',
+    canvasContextError: 'Failed to get canvas context',
+    takePhotoFailed: 'Failed to take photo: {error}',
+    labelUpdateFailed: 'Failed to update label',
+    noCameraFound: 'Warning: No available camera devices found'
   },
   login: {
     title: 'Login',

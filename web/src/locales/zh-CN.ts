@@ -1,3 +1,4 @@
+
 export default {
   common: {
     welcome: '欢迎',
@@ -17,7 +18,8 @@ export default {
     success: '操作成功',
     error: '操作失败',
     warning: '警告',
-    deleteSuccess: '删除成功'
+    deleteSuccess: '删除成功',
+    deleteConfirm: '确认删除?'
   },
   menu: {
     system: '系统',
@@ -100,6 +102,34 @@ export default {
     linkCopied: '链接已复制到剪贴板',
     fullInfoCopied: '完整任务信息已复制到剪贴板',
     copyError: '复制失败'
+  },
+  photo: {
+    takePhoto: '拍照',
+    selectPhoto: '选择照片',
+    photoSaved: '照片已保存',
+    savePhotoFailed: '保存照片失败',
+    photoDeleted: '照片已删除',
+    deletePhotoFailed: '删除照片失败',
+    uploadList: '待上传列表',
+    latitude: '纬度',
+    longitude: '经度',
+    gpsTime: 'GPS时间',
+    noPhotos: '没有待上传的图片',
+    uploadComplete: '上传完成！成功：{success}，失败：{failed}',
+    uploadFailed: '图片 {current}/{total} 上传失败: {error}',
+    nameTokenError: '获取name_token失败，请从邀请链接访问。',
+    uploading: '上传中...',
+    upload: '上传'
+  },
+  error: {
+    browserNotSupported: '浏览器不支持mediaDevices API',
+    cameraPermissionDenied: '获取摄像头失败，请确保已授予摄像头权限',
+    noVideoStream: '未找到视频流',
+    noVideoTrack: '未找到视频轨道',
+    canvasContextError: '无法获取canvas上下文',
+    takePhotoFailed: '拍照失败：{error}',
+    labelUpdateFailed: '标签更新失败',
+    noCameraFound: '警告：未找到任何可用的摄像头设备'
   },
   login: {
     title: '系统登录',
