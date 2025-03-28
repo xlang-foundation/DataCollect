@@ -54,7 +54,10 @@ export default {
     addZone: 'Add Zone',
     editZone: 'Edit Zone',
     deleteConfirm: 'Are you sure you want to delete this zone?',
-    zoneManagement: 'Zone Management'
+    zoneManagement: 'Zone Management',
+    name: 'Name',
+    selectZone: 'Please select a work zone',
+    startPhoto: 'Start Taking Photos'
   },
   label: {
     labelName: 'Label Name',

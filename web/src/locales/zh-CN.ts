@@ -53,7 +53,10 @@ export default {
     addZone: '添加区域',
     editZone: '编辑区域',
     deleteConfirm: '确定要删除该区域吗？',
-    zoneManagement: '区域管理'
+    zoneManagement: '区域管理',
+    name: '名称',
+    selectZone: '请选择工作区域',
+    startPhoto: '开始拍照'
   },
   label: {
     labelName: '标签名称',
