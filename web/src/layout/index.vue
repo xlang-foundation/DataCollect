@@ -42,11 +42,16 @@
             class="toggle-button"
             @click="toggleSidebar"
           >
-            <component :is="isCollapse ? 'Expand' : 'Fold'" />
+            <template v-if="isCollapse">
+              <Expand />
+            </template>
+            <template v-else>
+              <Fold />
+            </template>
           </el-icon>
         </div>
         <div class="header-right">
-          <el-select v-model="currentLang" @change="handleLanguageChange">
+          <el-select style="width: 100px;" v-model="currentLang" @change="handleLanguageChange">
             <el-option label="中文" value="zh-CN" />
             <el-option label="English" value="en-US" />
           </el-select>
@@ -224,6 +229,7 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 20px;
+  width: max-content;
 }
 
 .welcome {
