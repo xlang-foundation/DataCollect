@@ -156,7 +156,6 @@
 import { onMounted, onUnmounted, ref, toRaw, watch, type Ref } from "vue";
 import { v4 as uuidv4 } from 'uuid';
 import localforage from "localforage";
-import { blobToDataURL } from "@/utils/dataUrlTools";
 import { usePhotoStore } from "@/stores/photo.ts"
 import { ElMessage } from "element-plus";
 import { getLabelList, type LabelInfo } from '@/api/label';
@@ -501,11 +500,6 @@ function deleteItem() {
 
 // 存储文件id到URL的映射
 const urlMap = new Map<string, string>();
-
-setInterval(()=>{
-console.log(urlMap);
-
-}, 1000)
 
 // 在组件卸载时清理所有URL
 onUnmounted(() => {
