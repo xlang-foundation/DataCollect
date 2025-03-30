@@ -9,7 +9,7 @@
 
     <!-- 预览抽屉 -->
     <div class="preview-drawer" v-show="drawer">
-      <img class="preview-image" ref="imgdrawer"  @click="toggleFullscreen" :src="currentItem?.dataUrl" alt="">
+      <img class="preview-image" ref="imgdrawer"  @click="toggleFullscreen" :src="currentItem ? getImageUrl(currentItem.file, currentItem.id):''" alt="">
       <div class="preview-info">
         <!-- GPS信息 -->
         <div class="info-section">
@@ -35,7 +35,7 @@
               class="thumbnail-item"
               @click="openPreview(image)"
             >
-              <img :src="image.dataUrl" alt="photo" class="thumbnail-image">
+              <img :src="getImageUrl(image.file,image.id)" alt="photo" class="thumbnail-image">
             </div>
           </div>
         </div>
@@ -103,7 +103,7 @@
             class="thumbnail-item"
             @click="openPreview(image)"
           >
-            <img :src="image.dataUrl" alt="photo" class="thumbnail-image">
+            <img :src="getImageUrl(image.file,image.id)" alt="photo" class="thumbnail-image">
           </div>
         </div>
       </div>
@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, toRaw, watch, type Ref } from "vue";
+import { onMounted, onUnmounted, ref, toRaw, watch, type Ref } from "vue";
 import { v4 as uuidv4 } from 'uuid';
 import localforage from "localforage";
 import { blobToDataURL } from "@/utils/dataUrlTools";
@@ -193,15 +193,22 @@ const imgdrawer = ref<HTMLImageElement | null>(null)
 const drawer = ref(false)
 const currentItem = ref<ItemStruct | null>(null);
 // 配置存储
-const imageStore = localforage.createInstance({
+const imageStoreOld = localforage.createInstance({
   driver: localforage.INDEXEDDB,
   name: 'image-storage',
+  storeName: 'images'
+});
+imageStoreOld.clear()
+// 配置存储
+const imageStore = localforage.createInstance({
+  driver: localforage.INDEXEDDB,
+  name: 'image-data',
   storeName: 'images'
 });
 localforage.setDriver(localforage.INDEXEDDB);
 type ItemStruct = {
   id: string;
-  dataUrl: string;
+  file: File | null;
   gps?: {
     coords?:{
       latitude?: number | null;
@@ -386,8 +393,8 @@ function takePhoto() {
 
     imageCapture.takePhoto()
       .then(async (blob: Blob) => {
-        const dataUrl = await blobToDataURL(blob)
-        savePhoto(id, dataUrl)
+        const file = new File([blob], `${id}.jpg`, { type: 'image/jpeg' })
+        savePhoto(id, file)
       })
       .catch((error: any) => {
         console.error("ImageCapture takePhoto 失败，降级使用 Canvas:", error)
@@ -416,8 +423,13 @@ function takePhoto() {
       ctx.drawImage(videoDom, 0, 0, canvas.width, canvas.height)
 
       // 生成图片数据（可以调整图片质量）
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-      savePhoto(id, dataUrl)
+      canvas.toBlob((blob: Blob|null)=>{
+        if (!blob) {
+          throw new Error(t('error.blobError'))
+        }
+        const file = new File([blob], `${id}.jpg`, { type: 'image/jpeg' })
+        savePhoto(id, file)
+      }, 'image/jpeg', 1)
     } catch (error) {
       console.error("Canvas 拍照失败:", error)
       ElMessage.error(t('error.takePhotoFailed', { error }))
@@ -425,10 +437,10 @@ function takePhoto() {
   }
 
   // 保存照片的公共方法
-  function savePhoto(id: string, dataUrl: string) {
+  function savePhoto(id: string, file: File) {
     const image = {
       id,
-      dataUrl,
+      file,
       gps: {
         accuracy: photoStore.gps.accuracy,
         coords: {
@@ -464,12 +476,16 @@ function takePhoto() {
 // 从缓存中删除
 function deleteItem() {
   if (currentItem.value) {
-    imageStore.removeItem(currentItem.value.id.toString()).then(() => {
-      // 从images 中删除
+    const imageId = currentItem.value.id.toString();
+    imageStore.removeItem(imageId).then(() => {
+      // 从images中删除
       const index = images.value.findIndex(item => item.id === currentItem.value?.id);
       if (index !== -1) {
         images.value.splice(index, 1);
       }
+      // 清理对应的URL
+      clearImageUrl(imageId);
+      
       ElMessage({
         message: t('photo.photoDeleted'),
         type: 'success',
@@ -483,6 +499,45 @@ function deleteItem() {
   }
 }
 
+// 存储文件id到URL的映射
+const urlMap = new Map<string, string>();
+
+setInterval(()=>{
+console.log(urlMap);
+
+}, 1000)
+
+// 在组件卸载时清理所有URL
+onUnmounted(() => {
+  urlMap.forEach(url => {
+    URL.revokeObjectURL(url);
+  });
+  urlMap.clear();
+});
+
+// 优化的getImageUrl方法
+function getImageUrl(file: File | null, imageId?: string): string {
+  if (!file || !imageId) return '';
+  
+  // 检查是否已有该文件的URL
+  let url = urlMap.get(imageId);
+  if (!url) {
+    // 如果没有，创建新的URL并存储
+    url = URL.createObjectURL(file);
+    urlMap.set(imageId, url);
+  }
+  return url;
+}
+
+// 清理特定图片的URL
+function clearImageUrl(imageId: string) {
+  const url = urlMap.get(imageId);
+  if (url) {
+    URL.revokeObjectURL(url);
+    urlMap.delete(imageId);
+  }
+}
+
 const router = useRouter()
 
 const handleFileChange: UploadProps['onChange'] = async (file) => {
@@ -491,7 +546,7 @@ const handleFileChange: UploadProps['onChange'] = async (file) => {
     const id = uuidv4()
     const image:ItemStruct = {
       id,
-      dataUrl: await blobToDataURL(file.raw),
+      file: file.raw,
       gps: {
         accuracy: photoStore.gps.accuracy,
         coords: {
@@ -503,6 +558,7 @@ const handleFileChange: UploadProps['onChange'] = async (file) => {
       shotTime: Date.now(),
     }
     imageStore.setItem(id, image)
+    console.log(image);
     images.value.push(image);
     currentItem.value = image
     drawer.value = true
@@ -560,9 +616,10 @@ const submitUpload = async () => {
 
     try {
       // 将base64转换为File对象
-      const response = await fetch(image.dataUrl);
-      const blob = await response.blob();
-      const file = new File([blob], `photo_${image.shotTime}.jpg`, { type: 'image/jpeg' });
+      const file = image.file
+      if (!file) {
+        throw new Error(t('error.fileError'));
+      }
 
       // 准备labels字符串
       const labelsStr = (image.labels || []).join(',');
