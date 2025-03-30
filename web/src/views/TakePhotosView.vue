@@ -577,16 +577,12 @@ const handleFileChange: UploadProps['onChange'] = async (file) => {
     images.value.push(image);
     currentItem.value = image
     drawer.value = true
+    // Clear the selected status of the file
+    upload.value!.clearFiles()
   }
 }
 
 const upload = ref<UploadInstance | null>(null);
-const handleExceed = (files: UploadRawFile[], fileList: UploadRawFile[]) => {
-  upload.value!.clearFiles()
-  const file = files[0] as UploadRawFile
-  file.uid = genFileId()
-  upload.value!.handleStart(file)
-};
 
 // 上传状态管理
 const uploadStatus = ref({
