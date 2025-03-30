@@ -244,14 +244,35 @@ const cameraList: Ref<{
 }[]> = ref([])
 async function getDevices() {
   try {
-    // 检查mediaDevices API是否可用
-    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-      console.error('mediaDevices API不可用:', {
-        mediaDevices: !!navigator.mediaDevices,
-        enumerateDevices: !!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)
-      });
-      throw new Error(t('error.browserNotSupported'));
+    // 老的浏览器可能根本没有实现 mediaDevices，所以我们可以先设置一个空的对象
+    if (navigator.mediaDevices === undefined) {
+      // @ts-ignore
+      navigator.mediaDevices = {};
     }
+
+    // 一些浏览器部分支持 mediaDevices。我们不能直接给对象设置 getUserMedia
+    // 因为这样可能会覆盖已有的属性。这里我们只会在没有 getUserMedia 属性的时候添加它。
+    if (navigator.mediaDevices.getUserMedia === undefined) {
+      navigator.mediaDevices.getUserMedia = function (constraints) {
+        // 首先，如果有 getUserMedia 的话，就获得它
+        var getUserMedia =
+          // @ts-ignore
+          navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+        // 一些浏览器根本没实现它 - 那么就返回一个 error 到 promise 的 reject 来保持一个统一的接口
+        if (!getUserMedia) {
+          return Promise.reject(
+            new Error("getUserMedia is not implemented in this browser"),
+          );
+        }
+
+        // 否则，为老的 navigator.getUserMedia 方法包裹一个 Promise
+        return new Promise(function (resolve, reject) {
+          getUserMedia.call(navigator, constraints, resolve, reject);
+        });
+      };
+    }
+
 
     // 先请求摄像头权限
     await navigator.mediaDevices.getUserMedia({ video: true });

@@ -4,11 +4,15 @@ import { usePhotoStore } from "@/stores/photo.ts"
 import { useLanguageStore } from "@/stores/language.ts"
 import { useI18n } from 'vue-i18n'
 const photoStore = usePhotoStore()
-photoStore.fetchCurrentGPS()
 const languageStore = useLanguageStore()
 
 setInterval(() => {
-  photoStore.fetchCurrentGPS()
+  try {
+    photoStore.fetchCurrentGPS().then((res) => {
+    }).catch((err) => {
+    })
+  } catch (error) {
+  }
 }, 1000)
 
 const { locale } = useI18n()

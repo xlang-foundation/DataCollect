@@ -29,7 +29,7 @@ const i18n = createI18n({
 
 const app = createApp(App)
 
-// 添加Vue全局错误处理
+// Added Vue global error handling
 app.config.errorHandler = (err:any) => {
   console.error('Vue Error:', err)
   // 上报错误信息
