@@ -558,7 +558,7 @@ def upload_file():
     else:
         file_extension = "." + file_extension[len(file_extension)-1]
     id = utils.generate_uid()
-    file_path = "../storage/${id}${file_extension}"
+    file_path = "../storage/${timestamp}-${id}${file_extension}"
     binary = file_item["content"]
     write_binary(file_path,binary)
 
@@ -578,7 +578,7 @@ def upload_file():
     }
     
     # 创建并写入元信息JSON文件
-    json_path = "../storage/${id}.json"
+    json_path = "../storage/${timestamp}-${id}.json"
     json_content = str(metadata, format=True)
     write_binary(json_path, json_content)
     
